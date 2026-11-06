@@ -1,0 +1,21 @@
+{
+  "payload": {
+    "competencies": [
+      { "score": 2, "skill_id": "0192f0c1-0000-7000-8000-0000000000c1", "weight": 0.6 },
+      { "score": null, "skill_id": "0192f0c1-0000-7000-8000-0000000000c2", "weight": 0.4 }
+    ],
+    "completed_at": "{{completed_at}}",
+    "interview_id": "{{interview_id}}",
+    "interview_session_id": "{{interview_session_id}}",
+    "needs_review": true,
+    "outcome": "completed",
+    "question_id": "{{question_id}}",
+    "recommendation": "do_not_advance",
+    "requires_approval": true,
+    "revision": 1,
+    "score_ratio": 0.15,
+    "session_id": "{{session_id}}",
+    "tenant_id": "{{tenant_id}}"
+  },
+  "topic": "interview.session.completed.v1"
+}

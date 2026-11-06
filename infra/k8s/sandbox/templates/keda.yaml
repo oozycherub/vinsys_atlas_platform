@@ -1,0 +1,34 @@
+# Queue-driven autoscaling (PRD §2.2b): replicas = ceil(queued and running jobs / 20) per
+# language, plus one warm worker while the language was published in the last 7 days. The
+# scaler connects as atlas_metrics and can only call the two definer functions (0012).
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata: { name: sandbox-queue, namespace: atlas-sandbox }
+spec:
+  secretTargetRef:
+    - { parameter: connection, name: '{{ .Values.secrets.database }}', key: keda-url }
+{{- range .Values.languages }}
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata: { name: judge-{{ .slug }}, namespace: atlas-sandbox }
+spec:
+  scaleTargetRef: { name: judge-{{ .slug }} }
+  minReplicaCount: 0
+  maxReplicaCount: {{ $.Values.worker.keda.maxReplicas }}
+  pollingInterval: {{ $.Values.worker.keda.pollingInterval }}
+  cooldownPeriod: {{ $.Values.worker.keda.cooldownPeriod }}
+  triggers:
+    - type: postgresql
+      authenticationRef: { name: sandbox-queue }
+      metadata:
+        query: 'SELECT sandbox_queue_depth({{ .id }}::smallint)'
+        targetQueryValue: '{{ $.Values.worker.keda.pendingPerWorker }}'
+        activationTargetQueryValue: '0'
+    - type: postgresql
+      authenticationRef: { name: sandbox-queue }
+      metadata:
+        query: 'SELECT sandbox_language_warm({{ .id }}::smallint)'
+        targetQueryValue: '1'
+        activationTargetQueryValue: '0'
+{{- end }}

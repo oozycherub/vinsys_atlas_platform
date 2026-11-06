@@ -1,0 +1,71 @@
+{
+  "id": "G30",
+  "format": "pdf",
+  "contact": {
+    "full_name": "Farid Kowalczyk",
+    "email": "farid.kowalczyk30@mailbox.example",
+    "phone": "+31 6 1908 7975"
+  },
+  "location": "Gdansk, Poland",
+  "summary": "Senior Data Engineer with experience in React, Redis, Java.",
+  "work_history": [
+    {
+      "title": "Senior Data Engineer",
+      "employer": "Granite Peak Retail",
+      "start": "2022-04",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Migrated batch jobs with React and Redis",
+        "Designed reporting services using Java"
+      ],
+      "skills": [
+        "React",
+        "Redis",
+        "Java"
+      ]
+    },
+    {
+      "title": "Machine Learning Engineer",
+      "employer": "Cobalt Harbor Insurance",
+      "start": "2020-10",
+      "end": "2022-03",
+      "is_current": false,
+      "responsibilities": [
+        "Migrated batch jobs with dbt and Python",
+        "Maintained customer APIs using AWS"
+      ],
+      "skills": [
+        "dbt",
+        "Python",
+        "AWS"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Lakeside Institute of Technology",
+      "degree": "BEng",
+      "field": "Software Engineering",
+      "end_year": 2020
+    }
+  ],
+  "certifications": [],
+  "skills": [
+    "React",
+    "Redis",
+    "Java",
+    "dbt",
+    "Python",
+    "AWS",
+    "Kafka",
+    "GraphQL",
+    "Pandas"
+  ],
+  "skills_line_extra": [
+    "Kafka",
+    "GraphQL",
+    "Pandas"
+  ],
+  "file": "G30.pdf"
+}

@@ -1,0 +1,77 @@
+{
+  "id": "G11",
+  "format": "pdf2col",
+  "contact": {
+    "full_name": "Lorcan Rasmussen",
+    "email": "lorcan.rasmussen11@mailbox.example",
+    "phone": "+31 6 7011 5155"
+  },
+  "location": "Aarhus, Denmark",
+  "summary": "Site Reliability Engineer with experience in Elasticsearch, React, Java.",
+  "work_history": [
+    {
+      "title": "Site Reliability Engineer",
+      "employer": "Cobalt Harbor Insurance",
+      "start": "2023-03",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Automated deployment tooling with Elasticsearch and React",
+        "Designed event pipelines using Java"
+      ],
+      "skills": [
+        "Elasticsearch",
+        "React",
+        "Java"
+      ]
+    },
+    {
+      "title": "Machine Learning Engineer",
+      "employer": "Copperleaf Health",
+      "start": "2020-11",
+      "end": "2023-05",
+      "is_current": false,
+      "responsibilities": [
+        "Designed event pipelines with TypeScript and Grafana",
+        "Migrated data models using Spark"
+      ],
+      "skills": [
+        "TypeScript",
+        "Grafana",
+        "Spark"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Westmarch University",
+      "degree": "MSc",
+      "field": "Applied Mathematics",
+      "end_year": 2019
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Terraform Associate",
+      "issuer": "HashiCorp",
+      "issued": "2024-03"
+    }
+  ],
+  "skills": [
+    "Elasticsearch",
+    "React",
+    "Java",
+    "TypeScript",
+    "Grafana",
+    "Spark",
+    "Snowflake",
+    "PyTorch",
+    "Python"
+  ],
+  "skills_line_extra": [
+    "Snowflake",
+    "PyTorch",
+    "Python"
+  ],
+  "file": "G11.pdf"
+}

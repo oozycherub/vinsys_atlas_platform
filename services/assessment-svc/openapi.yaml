@@ -1,0 +1,733 @@
+openapi: 3.1.0
+info:
+  title: Atlas assessment-svc
+  version: 1.0.0
+  license: { name: Proprietary, identifier: LicenseRef-Proprietary }
+  description: >
+    Question bank, assessments (versioned, immutable once published), invite links, candidate
+    sessions with a server-authoritative timer, auto-scoring, reviewer workflow and results
+    (docs/prompts/08-assessment-svc.md). Staff use bearer JWTs. Candidates use the session token
+    returned when they redeem an invite (`Authorization: Session ast_…`), bound to one session.
+    Hidden answers (correct options, accepted answers, rubrics, tests) never appear in candidate
+    responses. All errors are RFC 9457 problem documents. Custom methods follow AIP-136.
+servers:
+  - url: http://assessment-svc:8088
+security:
+  - bearer: []
+
+paths:
+  /v1/question-banks:
+    post:
+      operationId: createQuestionBank
+      summary: 'Create a question bank. Roles: tenant_admin, recruiter, sme.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                tenant_id: { type: string, format: uuid }
+                name: { type: string, maxLength: 200 }
+                description: { type: string, maxLength: 2000 }
+                skill_ids: { type: array, items: { type: string, format: uuid } }
+      responses:
+        '201': { description: The bank. }
+        '400': { $ref: '#/components/responses/Problem' }
+
+  /v1/questions:
+    post:
+      operationId: createQuestion
+      summary: 'Create a question (version 1). The payload includes the hidden answer key.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/QuestionInput' }
+      responses:
+        '201':
+          description: The question, with its answer key (authors only).
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/QuestionAuthorView' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    get:
+      operationId: listQuestions
+      summary: Latest versions, newest first.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - { name: bank_id, in: query, schema: { type: string, format: uuid } }
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 200, default: 50 },
+          }
+      responses:
+        '200': { description: Questions with item statistics. }
+
+  /v1/questions/{questionId}:
+    parameters:
+      - { name: questionId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      operationId: getQuestion
+      summary: A question version with its difficulty index (p = correct / attempts, from 10 attempts).
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - { name: version, in: query, schema: { type: integer, minimum: 1 } }
+      responses:
+        '200':
+          description: The question.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/QuestionAuthorView' }
+        '404': { $ref: '#/components/responses/Problem' }
+    put:
+      operationId: reviseQuestion
+      summary: 'Create version n+1 (versions are immutable; published assessments keep theirs).'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/QuestionInput' }
+      responses:
+        '200': { description: The new version. }
+        '404': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
+  /v1/questions/{questionId}:retire:
+    post:
+      operationId: retireQuestion
+      summary: Retire every version (no new bank draws).
+      parameters:
+        - { name: questionId, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '204': { description: Retired. }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /v1/assessments:
+    post:
+      operationId: createAssessment
+      summary: 'Create a draft (≤ 20 sections, ≤ 5 banks per section).'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AssessmentInput' }
+      responses:
+        '201': { $ref: '#/components/responses/AssessmentWithETag' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+    get:
+      operationId: listAssessments
+      summary: Latest version of each assessment.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - {
+            name: status,
+            in: query,
+            schema: { type: string, enum: [draft, published, inactive, archived] },
+          }
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 100, default: 20 },
+          }
+      responses:
+        '200': { description: Assessments. }
+
+  /v1/assessments/{assessmentId}:
+    parameters:
+      - $ref: '#/components/parameters/AssessmentId'
+    get:
+      operationId: getAssessment
+      summary: The latest version, or `version`.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - { name: version, in: query, schema: { type: integer, minimum: 1 } }
+      responses:
+        '200': { $ref: '#/components/responses/AssessmentWithETag' }
+        '404': { $ref: '#/components/responses/Problem' }
+    put:
+      operationId: updateDraft
+      summary: 'Edit the draft (If-Match: lock_version). Published versions → 422 ASSESSMENT_PUBLISHED.'
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AssessmentInput' }
+      responses:
+        '200': { $ref: '#/components/responses/AssessmentWithETag' }
+        '412': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '428': { $ref: '#/components/responses/Problem' }
+
+  /v1/assessments/{assessmentId}:publish:
+    post:
+      operationId: publishAssessment
+      summary: >
+        Pin question versions, check bank sizes, freeze the version. Coding questions (fixed and in
+        referenced banks) need test cases verified by sandbox-svc: 422 REFERENCE_SOLUTION_REQUIRED,
+        CODING_TESTS_PENDING (retry shortly) or CODING_TESTS_INVALID. Emits
+        assessment.assessment.published.v1 (with coding_languages).
+      parameters:
+        [
+          { $ref: '#/components/parameters/AssessmentId' },
+          { $ref: '#/components/parameters/TenantId' },
+        ]
+      responses:
+        '200': { $ref: '#/components/responses/AssessmentWithETag' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /v1/assessments/{assessmentId}:newVersion:
+    post:
+      operationId: newAssessmentVersion
+      summary: A draft version n+1 copied from the latest published version.
+      parameters:
+        [
+          { $ref: '#/components/parameters/AssessmentId' },
+          { $ref: '#/components/parameters/TenantId' },
+        ]
+      responses:
+        '201': { $ref: '#/components/responses/AssessmentWithETag' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /v1/assessments/{assessmentId}:clone:
+    post:
+      operationId: cloneAssessment
+      summary: A new assessment (version 1, draft) with the same content.
+      parameters:
+        [
+          { $ref: '#/components/parameters/AssessmentId' },
+          { $ref: '#/components/parameters/TenantId' },
+        ]
+      responses:
+        '201': { $ref: '#/components/responses/AssessmentWithETag' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/assessments/{assessmentId}:setStatus:
+    post:
+      operationId: setAssessmentStatus
+      summary: Publish again, deactivate or archive a version (the latest unless `version`).
+      parameters:
+        - $ref: '#/components/parameters/AssessmentId'
+        - $ref: '#/components/parameters/TenantId'
+        - { name: version, in: query, schema: { type: integer, minimum: 1 } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties: { status: { type: string, enum: [published, inactive, archived] } }
+      responses:
+        '200': { $ref: '#/components/responses/AssessmentWithETag' }
+        '422': { $ref: '#/components/responses/Problem' }
+
+  /v1/assessments/{assessmentId}/invite-links:
+    parameters:
+      [
+        { $ref: '#/components/parameters/AssessmentId' },
+        { $ref: '#/components/parameters/TenantId' },
+      ]
+    post:
+      operationId: createInviteLink
+      summary: 'Open link or targeted invite to the published version. The token is returned once.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kind]
+              properties:
+                kind: { type: string, enum: [open, targeted] }
+                candidate_id: { type: [string, 'null'], format: uuid }
+                max_uses: { type: [integer, 'null'], minimum: 1 }
+                expires_at: { type: [string, 'null'], format: date-time }
+      responses:
+        '201': { description: 'The invite, its token and URL.' }
+        '422': { $ref: '#/components/responses/Problem' }
+    get:
+      operationId: listInviteLinks
+      summary: Invites (without tokens).
+      responses:
+        '200': { description: Invites. }
+  /v1/invite-links/{inviteId}:
+    delete:
+      operationId: revokeInviteLink
+      summary: Revoke an invite.
+      parameters:
+        - { name: inviteId, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '204': { description: Revoked. }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /v1/invite-links/{token}:redeem:
+    post:
+      operationId: redeemInvite
+      summary: 'Candidate: turn an invite into a session. Open links need name and email.'
+      security: []
+      parameters:
+        - { name: token, in: path, required: true, schema: { type: string, pattern: '^inv_' } }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                full_name: { type: string, maxLength: 200 }
+                email: { type: string, format: email }
+      responses:
+        '201':
+          description: The session and its token (shown once).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session_id: { type: string, format: uuid }
+                  session_token: { type: string }
+                  assessment: { type: object }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409':
+          description: SESSION_EXISTS or INVITE_EXHAUSTED.
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+        '422':
+          description: DETAILS_REQUIRED, MAX_ATTEMPTS, RETAKE_COOLDOWN or ASSESSMENT_UNAVAILABLE.
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+
+  /v1/sessions/{sessionId}:
+    get:
+      operationId: getRunnerSession
+      summary: 'Candidate: session state and the server-authoritative remaining time.'
+      security: [{ session: [] }]
+      parameters: [{ $ref: '#/components/parameters/SessionId' }]
+      responses:
+        '200': { $ref: '#/components/responses/RunnerSession' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /v1/sessions/{sessionId}:start:
+    post:
+      operationId: startSession
+      summary: 'Candidate: start the timer (deadline = now + duration). Emits assessment.session.started.v1.'
+      security: [{ session: [] }]
+      parameters: [{ $ref: '#/components/parameters/SessionId' }]
+      responses:
+        '200': { $ref: '#/components/responses/RunnerSession' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /v1/sessions/{sessionId}:heartbeat:
+    post:
+      operationId: heartbeat
+      summary: 'Candidate: keep-alive; resumes an interrupted session with the paused time credited (up to the allowance).'
+      security: [{ session: [] }]
+      parameters: [{ $ref: '#/components/parameters/SessionId' }]
+      responses:
+        '200': { $ref: '#/components/responses/RunnerSession' }
+  /v1/sessions/{sessionId}/questions/{n}:
+    get:
+      operationId: getQuestionForCandidate
+      summary: 'Candidate: question n (no answer key) with the saved answer and client_rev.'
+      security: [{ session: [] }]
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+        - { name: n, in: path, required: true, schema: { type: integer, minimum: 1 } }
+      responses:
+        '200': { description: The question (assessment-runner RunnerQuestion). }
+        '409':
+          description: SESSION_EXPIRED, SESSION_ENDED, SESSION_NOT_STARTED or SECTION_LOCKED.
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+  /v1/sessions/{sessionId}/responses/{questionId}:
+    put:
+      operationId: saveResponse
+      summary: 'Candidate: autosave; accepted only as the next client_rev and before the deadline.'
+      security: [{ session: [] }]
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+        - { name: questionId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [client_rev, answer]
+              properties:
+                client_rev: { type: integer, minimum: 1 }
+                answer: {}
+      responses:
+        '200': { description: Saved (assessment-runner SaveResponseResult). }
+        '400': { $ref: '#/components/responses/Problem' }
+        '409':
+          description: STALE_REVISION (with client_rev), SESSION_EXPIRED or SECTION_LOCKED.
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+        '429': { $ref: '#/components/responses/Problem' }
+  /v1/sessions/{sessionId}/questions/{questionId}/runs:
+    post:
+      operationId: runCode
+      summary: 'Candidate: run code against the sample tests, or custom stdin (forwarded to sandbox-svc; 1 run per 3 s).'
+      security: [{ session: [] }]
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+        - { name: questionId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [language, code]
+              properties:
+                language: { type: string, maxLength: 30 }
+                code: { type: string, maxLength: 65536 }
+                stdin: { type: [string, 'null'], maxLength: 65536 }
+      responses:
+        '202': { description: '{run_id}' }
+        '409':
+          description: SESSION_EXPIRED, SESSION_ENDED or SECTION_LOCKED.
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+        '422':
+          description: NOT_A_CODING_QUESTION, LANGUAGE_NOT_ALLOWED, LANGUAGE_DISABLED or BUNDLE_NOT_FOUND.
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+        '429':
+          description: RUN_THROTTLED (Retry-After) or the per-session request limit.
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+        '503': { $ref: '#/components/responses/Problem' }
+  /v1/sessions/{sessionId}/runs/{runId}:
+    get:
+      operationId: getRun
+      summary: "Candidate: a run's output (`wait` long-polls up to 10 s). Only runs of this session."
+      security: [{ session: [] }]
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+        - { name: runId, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: wait, in: query, schema: { type: integer, minimum: 0, maximum: 10, default: 0 } }
+      responses:
+        '200':
+          {
+            description: 'The run (sandbox-svc Run: status, stdout, stderr, compile_output, cases).',
+          }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/sessions/{sessionId}/questions/{questionId}/submissions:
+    post:
+      operationId: submitCode
+      summary: >
+        Candidate: submit code for judging against all tests. The same code for the same question is
+        one submission (retries are safe); the latest submission's verdict counts. Unsubmitted
+        drafts are submitted automatically when the session ends.
+      security: [{ session: [] }]
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+        - { name: questionId, in: path, required: true, schema: { type: string, format: uuid } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [language, code]
+              properties:
+                language: { type: string, maxLength: 30 }
+                code: { type: string, maxLength: 65536 }
+      responses:
+        '202': { description: '{submission_id, status: queued}' }
+        '409':
+          description: SESSION_EXPIRED or SESSION_ENDED.
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+        '422':
+          description: NOT_A_CODING_QUESTION, LANGUAGE_NOT_ALLOWED or BUNDLE_NOT_VERIFIED.
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+        '503': { $ref: '#/components/responses/Problem' }
+  /v1/sessions/{sessionId}/submissions/{submissionId}:
+    get:
+      operationId: getCodeSubmission
+      summary: 'Candidate: verdict and per-test summary; hidden tests show pass/fail only.'
+      security: [{ session: [] }]
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+        - { name: submissionId, in: path, required: true, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: The submission (sandbox-svc candidate view). }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/sessions/{sessionId}:submit:
+    post:
+      operationId: submitSession
+      summary: 'Candidate: submit. Exactly one of concurrent submits wins; after the deadline 409 SESSION_EXPIRED.'
+      security: [{ session: [] }]
+      parameters: [{ $ref: '#/components/parameters/SessionId' }]
+      responses:
+        '200': { $ref: '#/components/responses/RunnerSession' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /v1/sessions/{sessionId}/events:
+    get:
+      operationId: sessionEvents
+      summary: 'Candidate SSE: state, time_warning, paused, resumed, terminated, ended.'
+      security: [{ session: [] }]
+      parameters: [{ $ref: '#/components/parameters/SessionId' }]
+      responses:
+        '200':
+          description: Server-sent events.
+          content: { text/event-stream: { schema: { type: string } } }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /v1/assessments/{assessmentId}/sessions:
+    get:
+      operationId: listSessions
+      summary: 'Results, best first. Roles: tenant_admin, recruiter, hiring_manager, reviewer, sme.'
+      parameters:
+        - $ref: '#/components/parameters/AssessmentId'
+        - $ref: '#/components/parameters/TenantId'
+        - {
+            name: status,
+            in: query,
+            schema: { type: string, description: Comma-separated statuses. },
+          }
+        - { name: band, in: query, schema: { type: string } }
+        - { name: min_percent, in: query, schema: { type: number } }
+        - {
+            name: candidate_status,
+            in: query,
+            schema: { type: string, enum: [pending, shortlisted, on_hold, rejected] },
+          }
+        - { name: review_status, in: query, schema: { type: string } }
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 200, default: 50 },
+          }
+      responses:
+        '200': { description: Sessions. }
+  /v1/sessions/{sessionId}/result:
+    get:
+      operationId: getSessionResult
+      summary: Staff view with per-question answers, scores and the answer key.
+      parameters:
+        [
+          { $ref: '#/components/parameters/SessionId' },
+          { $ref: '#/components/parameters/TenantId' },
+        ]
+      responses:
+        '200': { description: The result. }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/sessions/{sessionId}/reviewers:
+    post:
+      operationId: assignReviewers
+      summary: Assign reviewers to a session awaiting review.
+      parameters:
+        [
+          { $ref: '#/components/parameters/SessionId' },
+          { $ref: '#/components/parameters/TenantId' },
+        ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reviewer_ids]
+              properties: { reviewer_ids: { type: array, items: { type: string }, maxItems: 10 } }
+      responses:
+        '201': { description: Assigned. }
+        '422': { $ref: '#/components/responses/Problem' }
+  /v1/sessions/{sessionId}:review:
+    post:
+      operationId: reviewSession
+      summary: 'An assigned reviewer scores every reviewable question. The score is held until all reviewers finish; then the mean is released.'
+      parameters:
+        [
+          { $ref: '#/components/parameters/SessionId' },
+          { $ref: '#/components/parameters/TenantId' },
+        ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [scores]
+              properties:
+                scores: { type: object, additionalProperties: { type: number, minimum: 0 } }
+                comment: { type: [string, 'null'], maxLength: 5000 }
+      responses:
+        '200': { description: '{released, pending_reviewers, status}' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /v1/sessions/{sessionId}/candidate-status:
+    patch:
+      operationId: setCandidateStatus
+      summary: 'Shortlist, hold or reject (If-Match: lock_version).'
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                { status: { type: string, enum: [pending, shortlisted, on_hold, rejected] } }
+      responses:
+        '200': { description: The session result. }
+        '412': { $ref: '#/components/responses/Problem' }
+        '428': { $ref: '#/components/responses/Problem' }
+
+  /healthz:
+    get:
+      operationId: healthz
+      summary: Liveness probe.
+      security: []
+      responses: { '200': { description: Alive. } }
+  /readyz:
+    get:
+      operationId: readyz
+      summary: Readiness probe (database reachable).
+      security: []
+      responses:
+        '200': { description: Ready. }
+        '503': { $ref: '#/components/responses/Problem' }
+
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+    session:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: '`Session ast_…`: the candidate token returned by redeem, bound to one session.'
+
+  parameters:
+    TenantId:
+      name: tenant_id
+      in: query
+      required: false
+      description: Platform principals only; tenant users act on their own tenant.
+      schema: { type: string, format: uuid }
+    AssessmentId:
+      { name: assessmentId, in: path, required: true, schema: { type: string, format: uuid } }
+    SessionId: { name: sessionId, in: path, required: true, schema: { type: string, format: uuid } }
+    IfMatch: { name: If-Match, in: header, required: true, schema: { type: string } }
+
+  responses:
+    Problem:
+      description: RFC 9457 problem document.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    AssessmentWithETag:
+      description: The assessment version.
+      headers:
+        ETag: { schema: { type: string } }
+      content:
+        application/json:
+          schema: { type: object }
+    RunnerSession:
+      description: The candidate's view of its session (assessment-runner RunnerSession).
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              session_id: { type: string, format: uuid }
+              status: { type: string }
+              title: { type: string }
+              navigation: { type: string, enum: [fixed_section_order, section_switch] }
+              question_count: { type: integer }
+              current_section: { type: integer }
+              deadline_at: { type: [string, 'null'], format: date-time }
+              server_time: { type: string, format: date-time }
+              remaining_seconds: { type: [integer, 'null'] }
+
+  schemas:
+    QuestionInput:
+      type: object
+      required: [type, prompt, payload]
+      properties:
+        tenant_id: { type: string, format: uuid }
+        bank_id: { type: [string, 'null'], format: uuid }
+        type:
+          {
+            type: string,
+            enum: [mcq, multiple_answer, true_false, fill_blank, descriptive, coding],
+          }
+        prompt: { type: string, maxLength: 20000 }
+        payload:
+          type: object
+          description: >
+            mcq / multiple_answer: options[{id, text, correct}] (+ partial_credit); true_false:
+            {correct}; fill_blank: {accepted[], case_sensitive}; descriptive: {rubric, max_words};
+            coding: {languages[], starter_code{}, tests[{input, expected, hidden, weight}],
+            reference_solution{language, code} (required to publish), checker, limits}.
+        marks: { type: number, exclusiveMinimum: 0, maximum: 1000, default: 1 }
+        negative_marks: { type: number, minimum: 0, default: 0 }
+        difficulty: { type: string, enum: [easy, medium, hard], default: medium }
+        skill_ids: { type: array, items: { type: string, format: uuid } }
+    QuestionAuthorView:
+      type: object
+      properties:
+        question_id: { type: string, format: uuid }
+        version: { type: integer }
+        type: { type: string }
+        prompt: { type: string }
+        payload: { type: object }
+        marks: { type: number }
+        stats:
+          type: [object, 'null']
+          properties:
+            attempts: { type: integer }
+            correct: { type: integer }
+            difficulty_index: { type: [number, 'null'] }
+    AssessmentInput:
+      type: object
+      required: [title, duration_seconds, definition]
+      properties:
+        tenant_id: { type: string, format: uuid }
+        title: { type: string, maxLength: 200 }
+        candidate_alias: { type: [string, 'null'] }
+        kind: { type: string, enum: [skills_test, coding, ai_interview, mixed] }
+        navigation: { type: string, enum: [fixed_section_order, section_switch] }
+        duration_seconds: { type: integer, minimum: 60, maximum: 21600 }
+        definition:
+          type: object
+          description: 'sections[1..20] of {title, questions[{question_id, version?, marks?}], banks[≤5 {bank_id, count, difficulty?}]}'
+        settings:
+          type: object
+          description: '{max_attempts, retake_cooldown_days, pause_allowance_seconds, shuffle_questions}'
+        report_config:
+          type: object
+          description: '{bands[{name, min_percent}] (one at 0 %), skill_validity_months}'
+        job_profile_id: { type: [string, 'null'], format: uuid }
+    Problem:
+      type: object
+      required: [type, title, status, detail, instance, code]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        code:
+          type: string
+          examples:
+            [
+              SESSION_EXPIRED,
+              STALE_REVISION,
+              SECTION_LOCKED,
+              INVITE_EXHAUSTED,
+              MAX_ATTEMPTS,
+              ASSESSMENT_PUBLISHED,
+            ]
+        request_id: { type: string }

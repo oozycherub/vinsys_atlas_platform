@@ -1,0 +1,32 @@
+# golangci-lint v1.64 (MASTER_ORCHESTRATION_PROMPT §3: CI fails on findings).
+run:
+  timeout: 5m
+  build-tags: [attack]
+linters:
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - gosec
+    - bodyclose
+    - errorlint
+    - misspell
+    - revive
+    - gocritic
+    - nilerr
+    - sqlclosecheck
+    - rowserrcheck
+linters-settings:
+  gosec:
+    excludes:
+      - G204 # exec of the isolate binary with built argv is the point of the adapter
+  revive:
+    rules:
+      - name: exported
+        disabled: true
+issues:
+  exclude-rules:
+    - path: _test\.go|internal/testkit/
+      linters: [gosec, errcheck]

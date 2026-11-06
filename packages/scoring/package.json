@@ -1,0 +1,11 @@
+{
+  "name": "@atlas/scoring",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Candidate ↔ job scoring formula (PRD §2.1(b)) as pure functions; shared by matching-svc and the marketplace",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ]
+}

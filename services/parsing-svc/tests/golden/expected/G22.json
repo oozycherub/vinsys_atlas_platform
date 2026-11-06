@@ -1,0 +1,96 @@
+{
+  "id": "G22",
+  "format": "docx",
+  "contact": {
+    "full_name": "Wren Okonkwo",
+    "email": "wren.okonkwo22@mailbox.example",
+    "phone": "+31 6 3169 7752"
+  },
+  "location": "Porto, Portugal",
+  "summary": "Machine Learning Engineer with experience in GraphQL, Elasticsearch, Kafka.",
+  "work_history": [
+    {
+      "title": "Machine Learning Engineer",
+      "employer": "Lanternfish Media",
+      "start": "2024-07",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Designed customer APIs with GraphQL and Elasticsearch",
+        "Built deployment tooling using Kafka"
+      ],
+      "skills": [
+        "GraphQL",
+        "Elasticsearch",
+        "Kafka"
+      ]
+    },
+    {
+      "title": "Backend Engineer",
+      "employer": "Tidewater Logistics",
+      "start": "2021-12",
+      "end": "2024-05",
+      "is_current": false,
+      "responsibilities": [
+        "Migrated batch jobs with TypeScript and Go",
+        "Scaled customer APIs using Airflow"
+      ],
+      "skills": [
+        "TypeScript",
+        "Go",
+        "Airflow"
+      ]
+    },
+    {
+      "title": "Machine Learning Engineer",
+      "employer": "Meadowbrook Energy",
+      "start": "2019-03",
+      "end": "2021-10",
+      "is_current": false,
+      "responsibilities": [
+        "Automated batch jobs with Docker and SQL",
+        "Designed batch jobs using React"
+      ],
+      "skills": [
+        "Docker",
+        "SQL",
+        "React"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Riverbend Polytechnic",
+      "degree": "BEng",
+      "field": "Software Engineering",
+      "end_year": 2018
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Google Professional Data Engineer",
+      "issuer": "Google Cloud",
+      "issued": "2024-08"
+    }
+  ],
+  "skills": [
+    "GraphQL",
+    "Elasticsearch",
+    "Kafka",
+    "TypeScript",
+    "Go",
+    "Airflow",
+    "Docker",
+    "SQL",
+    "React",
+    "Grafana",
+    "Java",
+    "Linux"
+  ],
+  "skills_line_extra": [
+    "Grafana",
+    "Java",
+    "Linux"
+  ],
+  "file": "G22.docx"
+}

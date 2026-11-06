@@ -1,0 +1,90 @@
+{
+  "id": "G33",
+  "format": "txt",
+  "contact": {
+    "full_name": "Ines Lindqvist",
+    "email": "ines.lindqvist33@mailbox.example",
+    "phone": "+31 6 4431 5464"
+  },
+  "location": "Valencia, Spain",
+  "summary": "Software Engineer with experience in Kafka, Elasticsearch, Grafana.",
+  "work_history": [
+    {
+      "title": "Software Engineer",
+      "employer": "Ironbark Robotics",
+      "start": "2024-11",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Built customer APIs with Kafka and Elasticsearch",
+        "Migrated reporting services using Grafana"
+      ],
+      "skills": [
+        "Kafka",
+        "Elasticsearch",
+        "Grafana"
+      ]
+    },
+    {
+      "title": "Site Reliability Engineer",
+      "employer": "Quarry Lane Software",
+      "start": "2022-02",
+      "end": "2024-03",
+      "is_current": false,
+      "responsibilities": [
+        "Migrated event pipelines with TypeScript and SQL",
+        "Scaled customer APIs using Kubernetes"
+      ],
+      "skills": [
+        "TypeScript",
+        "SQL",
+        "Kubernetes"
+      ]
+    },
+    {
+      "title": "Platform Engineer",
+      "employer": "Silverline Payments",
+      "start": "2018-08",
+      "end": "2022-12",
+      "is_current": false,
+      "responsibilities": [
+        "Built deployment tooling with Spark and Redis",
+        "Scaled deployment tooling using Snowflake"
+      ],
+      "skills": [
+        "Spark",
+        "Redis",
+        "Snowflake"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Northgate College of Engineering",
+      "degree": "MSc",
+      "field": "Data Science",
+      "end_year": 2016
+    }
+  ],
+  "certifications": [],
+  "skills": [
+    "Kafka",
+    "Elasticsearch",
+    "Grafana",
+    "TypeScript",
+    "SQL",
+    "Kubernetes",
+    "Spark",
+    "Redis",
+    "Snowflake",
+    "Java",
+    "dbt",
+    "Go"
+  ],
+  "skills_line_extra": [
+    "Java",
+    "dbt",
+    "Go"
+  ],
+  "file": "G33.txt"
+}

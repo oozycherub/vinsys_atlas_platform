@@ -1,0 +1,778 @@
+openapi: 3.1.0
+info:
+  title: Atlas identity-svc
+  version: 1.0.0
+  license: { name: Proprietary, identifier: LicenseRef-Proprietary }
+  description: >
+    Users, roles, sign-in and token issuance (docs/prompts/02-identity-svc.md, increments 2a and 2b).
+    All errors are RFC 9457 problem documents; token-endpoint errors also carry the RFC 6749
+    `error` member. Custom methods follow AIP-136 (`/{id}:verb`).
+servers:
+  - url: http://localhost:8082
+security:
+  - bearer: []
+
+paths:
+  /v1/users:invite:
+    post:
+      operationId: inviteUser
+      summary: 'Invite a user (status invited; 72 h single-use link). Roles: tenant_admin (own tenant), super_admin.'
+      description: Platform staff must pass `tenant_id`. `super_admin` and `service` can never be granted (403 ROLE_NOT_GRANTABLE).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/InviteRequest' }
+      responses:
+        '201':
+          description: Invited.
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+            Location: { schema: { type: string } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
+  /v1/users:
+    get:
+      operationId: listUsers
+      summary: 'List users, newest first. Roles: tenant_admin (own tenant), super_admin (with tenant_id).'
+      parameters:
+        - $ref: '#/components/parameters/TenantIdQuery'
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 100, default: 20 },
+          }
+        - { name: cursor, in: query, schema: { type: string, maxLength: 200 } }
+      responses:
+        '200':
+          description: A page of users.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, next_cursor]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/User' } }
+                  next_cursor: { type: [string, 'null'] }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /v1/users/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/UserId'
+      - $ref: '#/components/parameters/TenantIdQuery'
+    get:
+      operationId: getUser
+      summary: 'Read a user. Another tenant’s user gives 404. Roles: tenant_admin (own), super_admin.'
+      responses:
+        '200': { $ref: '#/components/responses/UserWithETag' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: patchUser
+      summary: 'Change display name, roles or business units. Roles: tenant_admin (own), super_admin.'
+      description: Nobody can change their own roles (403 SELF_ROLE_CHANGE). Emits identity.user.roles_changed.v1 when roles change.
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PatchUserRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/UserWithETag' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '412': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '428': { $ref: '#/components/responses/Problem' }
+
+  /v1/users/{userId}:deactivate:
+    $ref: '#/components/pathItems/deactivateUser'
+
+  /v1/users/{userId}:resendInvitation:
+    $ref: '#/components/pathItems/resendInvitation'
+
+  /v1/sso/{slug}/start:
+    get:
+      operationId: startTenantSso
+      summary: 'Start federated sign-in for a tenant (redirects to its IdP). Public.'
+      description: >
+        OAuth authorization request of an Atlas client (RFC 6749 §4.1.1 + PKCE S256). The flow ends
+        with a redirect to redirect_uri carrying `code` and `state`. Invalid client, redirect_uri
+        or PKCE parameters give a problem document, never a redirect.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Slug'
+        - { name: response_type, in: query, required: true, schema: { type: string, const: code } }
+        - { name: client_id, in: query, required: true, schema: { type: string } }
+        - { name: redirect_uri, in: query, required: true, schema: { type: string, format: uri } }
+        - { name: code_challenge, in: query, required: true, schema: { type: string } }
+        - {
+            name: code_challenge_method,
+            in: query,
+            required: true,
+            schema: { type: string, const: S256 },
+          }
+        - { name: state, in: query, required: true, schema: { type: string, maxLength: 500 } }
+      responses:
+        '302': { $ref: '#/components/responses/Redirect' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /v1/sso/{slug}/callback:
+    get:
+      operationId: tenantOidcCallback
+      summary: 'OIDC redirect URI registered at the tenant IdP. Public.'
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Slug'
+        - { name: state, in: query, schema: { type: string } }
+        - { name: code, in: query, schema: { type: string } }
+        - { name: error, in: query, schema: { type: string } }
+      responses:
+        '302': { $ref: '#/components/responses/Redirect' }
+        '400': { $ref: '#/components/responses/Problem' }
+
+  /v1/sso/{slug}/acs:
+    post:
+      operationId: tenantSamlAcs
+      summary: 'SAML assertion consumer service (HTTP-POST binding). Public.'
+      description: Signed assertions only; the response must answer this login's AuthnRequest.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/Slug'
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema:
+              type: object
+              properties:
+                SAMLResponse: { type: string }
+                RelayState: { type: string }
+      responses:
+        '303': { $ref: '#/components/responses/Redirect' }
+        '400': { $ref: '#/components/responses/Problem' }
+
+  /v1/staff/sso/start:
+    get:
+      operationId: startStaffSso
+      summary: 'Start platform-staff sign-in at the workforce IdP. Public.'
+      security: []
+      parameters:
+        - { name: response_type, in: query, required: true, schema: { type: string, const: code } }
+        - { name: client_id, in: query, required: true, schema: { type: string } }
+        - { name: redirect_uri, in: query, required: true, schema: { type: string, format: uri } }
+        - { name: code_challenge, in: query, required: true, schema: { type: string } }
+        - {
+            name: code_challenge_method,
+            in: query,
+            required: true,
+            schema: { type: string, const: S256 },
+          }
+        - { name: state, in: query, required: true, schema: { type: string, maxLength: 500 } }
+      responses:
+        '302': { $ref: '#/components/responses/Redirect' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /v1/staff/sso/callback:
+    get:
+      operationId: staffOidcCallback
+      summary: 'OIDC redirect URI registered at the workforce IdP. Public.'
+      security: []
+      parameters:
+        - { name: state, in: query, schema: { type: string } }
+        - { name: code, in: query, schema: { type: string } }
+        - { name: error, in: query, schema: { type: string } }
+      responses:
+        '302': { $ref: '#/components/responses/Redirect' }
+        '400': { $ref: '#/components/responses/Problem' }
+
+  /v1/staff-accounts:
+    get:
+      operationId: listStaffAccounts
+      summary: 'List platform staff. Roles: super_admin.'
+      responses:
+        '200':
+          description: Staff accounts.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/StaffAccount' } }
+        '403': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createStaffAccount
+      summary: 'Add a platform staff member (signs in via the workforce IdP). Roles: super_admin.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [email, display_name]
+              properties:
+                email: { type: string, format: email }
+                display_name: { type: string, minLength: 1, maxLength: 200 }
+      responses:
+        '201':
+          description: Created.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/StaffAccount' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+
+  /v1/staff-accounts/{staffId}:disable:
+    $ref: '#/components/pathItems/disableStaff'
+
+  /v1/invitations:redeem:
+    post:
+      operationId: redeemInvitation
+      summary: 'Redeem an invitation: activates the user and signs them in. Public.'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [tenant_slug, token]
+              properties:
+                tenant_slug: { $ref: '#/components/schemas/Slug' }
+                token: { type: string, minLength: 20, maxLength: 200 }
+      responses:
+        '200': { $ref: '#/components/responses/Tokens' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /v1/auth/magic-links:
+    post:
+      operationId: requestMagicLink
+      summary: 'Email a 30-minute login link. Public; 5 per email per hour.'
+      description: >
+        Always 202, whether or not the email is registered. Keep `binding` in the browser and send
+        it with the redeem call. 403 SSO_REQUIRED when the email domain belongs to an
+        SSO-enforced tenant.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [tenant_slug, email]
+              properties:
+                tenant_slug: { $ref: '#/components/schemas/Slug' }
+                email: { type: string, format: email }
+      responses:
+        '202':
+          description: Accepted.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [binding, expires_in]
+                properties:
+                  binding: { type: string }
+                  expires_in: { type: integer, examples: [1800] }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /v1/auth/magic-links:redeem:
+    post:
+      operationId: redeemMagicLink
+      summary: 'Exchange a login link (plus its browser binding) for tokens. Public.'
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [tenant_slug, token, binding]
+              properties:
+                tenant_slug: { $ref: '#/components/schemas/Slug' }
+                token: { type: string, minLength: 20, maxLength: 200 }
+                binding: { type: string, minLength: 20, maxLength: 200 }
+      responses:
+        '200': { $ref: '#/components/responses/Tokens' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+
+  /v1/oauth/token:
+    post:
+      operationId: token
+      summary: 'OAuth 2.0 token endpoint (authorization_code + PKCE, refresh_token, client_credentials). Public / client auth.'
+      description: >
+        authorization_code: exchanges a code from a federated sign-in (single use, 60 s, bound to
+        client_id, redirect_uri and the S256 challenge). Staff get no refresh token.
+        Refresh tokens rotate on every use; presenting a used one revokes the whole family
+        (401 TOKEN_REUSE_DETECTED). Machine clients authenticate with HTTP Basic or body parameters.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/x-www-form-urlencoded:
+            schema: { $ref: '#/components/schemas/TokenRequest' }
+          application/json:
+            schema: { $ref: '#/components/schemas/TokenRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/Tokens' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '429': { $ref: '#/components/responses/RateLimited' }
+
+  /v1/sso-connections/{tenantId}:
+    parameters:
+      - { name: tenantId, in: path, required: true, schema: { type: string, format: uuid } }
+    get:
+      operationId: getSsoConnection
+      summary: 'Read the SSO connection. Roles: tenant_admin (own), super_admin.'
+      responses:
+        '200':
+          description: The connection.
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SsoConnection' }
+        '404': { $ref: '#/components/responses/Problem' }
+    put:
+      operationId: putSsoConnection
+      summary: 'Create or replace the SSO connection. Roles: tenant_admin (own), super_admin.'
+      description: Replacing requires If-Match (428/412). `enforced` blocks magic-link login for workforce users.
+      parameters:
+        - { name: If-Match, in: header, required: false, schema: { type: string } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SsoConnectionRequest' }
+      responses:
+        '200':
+          description: Replaced.
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SsoConnection' }
+        '201':
+          description: Created.
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SsoConnection' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '412': { $ref: '#/components/responses/Problem' }
+        '428': { $ref: '#/components/responses/Problem' }
+
+  /v1/service-clients:
+    post:
+      operationId: createServiceClient
+      summary: 'Create a machine client. The secret is returned once. Roles: super_admin.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [name, scopes]
+              properties:
+                name: { type: string, pattern: '^[a-z0-9-]{3,60}$' }
+                tenant_id: { type: [string, 'null'], format: uuid }
+                scopes:
+                  {
+                    type: array,
+                    items: { type: string, pattern: '^[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$' },
+                  }
+                description: { type: string, maxLength: 500 }
+      responses:
+        '201':
+          description: Created; store client_secret now.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [client_id, client_secret, tenant_id, scopes]
+                properties:
+                  client_id: { type: string, examples: [svc_gateway] }
+                  client_secret: { type: string }
+                  tenant_id: { type: [string, 'null'] }
+                  scopes: { type: array, items: { type: string } }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+
+  /v1/signing-keys:rotate:
+    post:
+      operationId: rotateSigningKey
+      summary: 'Pre-publish a new signing key (signs after 10 min). Roles: super_admin.'
+      responses:
+        '200':
+          description: Successor created.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [kid, activates_at]
+                properties:
+                  kid: { type: string }
+                  activates_at: { type: string, format: date-time }
+        '403': { $ref: '#/components/responses/Problem' }
+
+  /.well-known/jwks.json:
+    get:
+      operationId: jwks
+      summary: 'Public signing keys (ES256), including pre-published and not-yet-expired ones. Public.'
+      security: []
+      responses:
+        '200':
+          description: JSON Web Key Set (cacheable for 5 minutes).
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [keys]
+                properties:
+                  keys: { type: array, items: { type: object } }
+
+  /.well-known/openid-configuration:
+    get:
+      operationId: openidConfiguration
+      summary: 'Discovery document. Public.'
+      security: []
+      responses:
+        '200':
+          description: Provider metadata.
+          content:
+            application/json:
+              schema: { type: object }
+
+  /healthz:
+    get:
+      operationId: healthz
+      summary: Liveness probe.
+      security: []
+      responses:
+        '200': { description: Alive. }
+  /readyz:
+    get:
+      operationId: readyz
+      summary: Readiness probe (database reachable).
+      security: []
+      responses:
+        '200': { description: Ready. }
+        '503': { $ref: '#/components/responses/Problem' }
+
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+
+  parameters:
+    Slug:
+      name: slug
+      in: path
+      required: true
+      schema: { type: string, pattern: '^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])$' }
+    UserId: { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
+    TenantIdQuery:
+      name: tenant_id
+      in: query
+      required: false
+      description: Required for platform staff; tenant users may omit it (another tenant's id gives 404).
+      schema: { type: string, format: uuid }
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      description: ETag from the last read, e.g. "3". Missing → 428, stale → 412.
+      schema: { type: string }
+
+  headers:
+    ETag: { description: 'Resource version, e.g. "3"', schema: { type: string } }
+
+  responses:
+    Redirect:
+      description: >
+        Redirect (Cache-Control no-store). After the state is validated, failures redirect to the
+        client's redirect_uri with `error=access_denied` and `error_description`.
+      headers:
+        Location: { schema: { type: string, format: uri } }
+    Problem:
+      description: RFC 9457 problem document.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    RateLimited:
+      description: Too many requests.
+      headers:
+        Retry-After: { description: Seconds to wait., schema: { type: integer } }
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    UserWithETag:
+      description: The user.
+      headers: { ETag: { $ref: '#/components/headers/ETag' } }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/User' }
+    Tokens:
+      description: Tokens (never cached).
+      headers:
+        Cache-Control: { schema: { type: string, const: no-store } }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/TokenResponse' }
+
+  pathItems:
+    resendInvitation:
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/TenantIdQuery'
+      post:
+        operationId: resendInvitation
+        summary: 'Send a new invitation link; earlier links stop working. Roles: tenant_admin (own), super_admin.'
+        responses:
+          '200': { $ref: '#/components/responses/UserWithETag' }
+          '404': { $ref: '#/components/responses/Problem' }
+          '422': { $ref: '#/components/responses/Problem' }
+    disableStaff:
+      parameters:
+        - { name: staffId, in: path, required: true, schema: { type: string, format: uuid } }
+      post:
+        operationId: disableStaffAccount
+        summary: 'Disable a staff account. Roles: super_admin.'
+        responses:
+          '200':
+            description: Disabled.
+            content:
+              application/json:
+                schema: { $ref: '#/components/schemas/StaffAccount' }
+          '400': { $ref: '#/components/responses/Problem' }
+          '404': { $ref: '#/components/responses/Problem' }
+    deactivateUser:
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+        - $ref: '#/components/parameters/TenantIdQuery'
+        - { name: If-Match, in: header, required: false, schema: { type: string } }
+      post:
+        operationId: deactivateUser
+        summary: 'Deactivate a user and revoke their refresh tokens. Roles: tenant_admin (own), super_admin.'
+        responses:
+          '200': { $ref: '#/components/responses/UserWithETag' }
+          '403': { $ref: '#/components/responses/Problem' }
+          '404': { $ref: '#/components/responses/Problem' }
+          '412': { $ref: '#/components/responses/Problem' }
+          '422': { $ref: '#/components/responses/Problem' }
+
+  schemas:
+    Slug: { type: string, pattern: '^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])$' }
+    TenantRole:
+      type: string
+      enum: [tenant_admin, recruiter, hiring_manager, reviewer, sme, employee, candidate]
+
+    User:
+      type: object
+      required:
+        [
+          user_id,
+          tenant_id,
+          email,
+          display_name,
+          roles,
+          business_unit_ids,
+          status,
+          last_login_at,
+          version,
+          created_at,
+          updated_at,
+        ]
+      properties:
+        user_id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        display_name: { type: string }
+        roles: { type: array, items: { $ref: '#/components/schemas/TenantRole' } }
+        business_unit_ids: { type: array, items: { type: string, format: uuid } }
+        status: { type: string, enum: [invited, active, deactivated] }
+        last_login_at: { type: [string, 'null'], format: date-time }
+        version: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    InviteRequest:
+      type: object
+      additionalProperties: false
+      required: [email, display_name, roles]
+      properties:
+        tenant_id: { type: string, format: uuid, description: Required for platform staff. }
+        email: { type: string, format: email }
+        display_name: { type: string, minLength: 1, maxLength: 200 }
+        roles: { type: array, minItems: 1, items: { type: string } }
+        business_unit_ids: { type: array, maxItems: 100, items: { type: string, format: uuid } }
+
+    PatchUserRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        display_name: { type: string, minLength: 1, maxLength: 200 }
+        roles: { type: array, minItems: 1, items: { type: string } }
+        business_unit_ids: { type: array, maxItems: 100, items: { type: string, format: uuid } }
+
+    TokenRequest:
+      type: object
+      required: [grant_type]
+      properties:
+        grant_type: { type: string, enum: [refresh_token, client_credentials, authorization_code] }
+        code: { type: string, description: authorization_code grant. }
+        code_verifier:
+          { type: string, description: 'authorization_code grant: PKCE verifier (43–128 chars).' }
+        redirect_uri:
+          { type: string, description: authorization_code grant; must equal the one used at start. }
+        refresh_token: { type: string }
+        client_id: { type: string }
+        client_secret: { type: string }
+        scope: { type: string, description: Space-separated subset of the client's scopes. }
+
+    TokenResponse:
+      type: object
+      required: [access_token, token_type, expires_in]
+      properties:
+        access_token:
+          {
+            type: string,
+            description: 'ES256 JWT (typ at+jwt); claims sub, tid, roles, bu, scopes, amr, iat, exp, jti.',
+          }
+        token_type: { type: string, const: Bearer }
+        expires_in: { type: integer, examples: [600] }
+        refresh_token:
+          { type: string, description: 'Rotating, 14 days. Format rt.<tenant_id>.<secret>.' }
+        scope: { type: string }
+
+    SsoConnectionRequest:
+      type: object
+      required: [protocol, metadata]
+      properties:
+        protocol: { type: string, enum: [oidc, saml] }
+        enforced: { type: boolean, default: false }
+        metadata:
+          description: 'oidc: {issuer, client_id}. saml: {entry_point, idp_cert (PEM), idp_issuer?}.'
+          oneOf:
+            - type: object
+              additionalProperties: false
+              required: [issuer, client_id]
+              properties:
+                issuer: { type: string, format: uri }
+                client_id: { type: string }
+            - type: object
+              additionalProperties: false
+              required: [entry_point, idp_cert]
+              properties:
+                entry_point: { type: string, format: uri }
+                idp_cert: { type: string }
+                idp_issuer: { type: string }
+        client_secret:
+          type: string
+          writeOnly: true
+          description: OIDC only. Required on create; omit on replace to keep the stored secret. Never returned.
+        domain_hints:
+          type: array
+          maxItems: 50
+          items: { type: string }
+          description: Email domains this IdP may sign in. Empty means unrestricted.
+        jit_role:
+          type: [string, 'null']
+          enum: [recruiter, hiring_manager, reviewer, sme, employee, candidate, null]
+          description: Role for just-in-time provisioning of unknown SSO users; null refuses them.
+
+    SsoConnection:
+      type: object
+      required: [tenant_id, protocol, enforced, metadata, domain_hints, version, updated_at]
+      properties:
+        tenant_id: { type: string, format: uuid }
+        protocol: { type: string, enum: [oidc, saml] }
+        enforced: { type: boolean }
+        metadata: { type: object }
+        domain_hints: { type: array, items: { type: string } }
+        has_client_secret: { type: boolean }
+        jit_role: { type: [string, 'null'] }
+        service_provider:
+          type: [object, 'null']
+          description: What to register at the IdP.
+          properties:
+            oidc_redirect_uri: { type: string, format: uri }
+            saml_acs_url: { type: string, format: uri }
+            saml_entity_id: { type: string }
+        version: { type: integer }
+        updated_at: { type: string, format: date-time }
+
+    StaffAccount:
+      type: object
+      required: [staff_id, email, display_name, roles, status, last_login_at, created_at]
+      properties:
+        staff_id: { type: string, format: uuid }
+        email: { type: string, format: email }
+        display_name: { type: string }
+        roles: { type: array, items: { type: string, const: super_admin } }
+        status: { type: string, enum: [active, disabled] }
+        last_login_at: { type: [string, 'null'], format: date-time }
+        created_at: { type: string, format: date-time }
+
+    Problem:
+      type: object
+      required: [type, title, status, detail, instance, code]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        code:
+          type: string
+          examples:
+            [
+              USER_EMAIL_TAKEN,
+              USER_NOT_FOUND,
+              ROLE_NOT_GRANTABLE,
+              SELF_ROLE_CHANGE,
+              INVALID_LINK,
+              INVITATION_EXPIRED,
+              INVALID_GRANT,
+              INVALID_CLIENT,
+              INVALID_SCOPE,
+              TOKEN_REUSE_DETECTED,
+              TENANT_SUSPENDED,
+              TENANT_ID_REQUIRED,
+              SSO_REQUIRED,
+              SSO_NOT_CONFIGURED,
+              INVALID_REDIRECT_URI,
+              INVALID_CODE_CHALLENGE,
+              INVALID_STATE,
+              USER_NOT_INVITED,
+              STAFF_EMAIL_TAKEN,
+              RATE_LIMITED,
+              VERSION_MISMATCH,
+              IF_MATCH_REQUIRED,
+            ]
+        error: { type: string, description: RFC 6749 error code on token-endpoint failures. }
+        request_id: { type: string }

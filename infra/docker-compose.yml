@@ -1,0 +1,85 @@
+# Local reference environment (PRD §1.3). Start with: make infra-up
+name: atlas
+
+services:
+  postgres:
+    image: pgvector/pgvector:0.8.0-pg16
+    environment:
+      POSTGRES_USER: atlas_owner
+      POSTGRES_PASSWORD: atlas_owner_dev
+      POSTGRES_DB: atlas
+    ports: ['5432:5432']
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U atlas_owner -d atlas']
+      interval: 5s
+      retries: 20
+
+  pgbouncer:
+    image: edoburu/pgbouncer:v1.23.1-p3
+    environment:
+      DATABASE_URL: postgres://atlas_app:atlas_app_dev@postgres:5432/atlas
+      POOL_MODE: transaction
+      AUTH_TYPE: scram-sha-256
+    ports: ['6432:5432']
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  redis:
+    image: redis:7.4-alpine
+    ports: ['6379:6379']
+
+  redpanda:
+    image: redpandadata/redpanda:v24.2.7
+    command:
+      - redpanda
+      - start
+      - --mode=dev-container
+      - --smp=1
+      - --kafka-addr=PLAINTEXT://0.0.0.0:9092
+      - --advertise-kafka-addr=PLAINTEXT://localhost:9092
+    ports: ['9092:9092', '8081:8081']
+
+  minio:
+    image: minio/minio:RELEASE.2024-10-13T13-34-11Z
+    command: server /data --console-address ':9001'
+    environment:
+      MINIO_ROOT_USER: atlas
+      MINIO_ROOT_PASSWORD: atlas-dev-secret
+    ports: ['9000:9000', '9001:9001']
+    volumes: [miniodata:/data]
+
+  # Workflow engine for parsing-svc (ParseResumeWorkflow). Stores its state in the same Postgres
+  # container, in its own databases (temporal, temporal_visibility).
+  temporal:
+    image: temporalio/auto-setup:1.25.2
+    environment:
+      DB: postgres12
+      DB_PORT: 5432
+      POSTGRES_USER: atlas_owner
+      POSTGRES_PWD: atlas_owner_dev
+      POSTGRES_SEEDS: postgres
+    ports: ['7233:7233']
+    depends_on:
+      postgres: { condition: service_healthy }
+
+  temporal-ui:
+    image: temporalio/ui:2.31.2
+    environment:
+      TEMPORAL_ADDRESS: temporal:7233
+    ports: ['8233:8080']
+    depends_on: [temporal]
+
+  # Malware scanning for the résumé security gate (clamd INSTREAM on 3310). The first start
+  # downloads signatures and takes a few minutes before the port opens.
+  clamav:
+    image: clamav/clamav:1.4.1
+    ports: ['3310:3310']
+    volumes: [clamdata:/var/lib/clamav]
+
+volumes:
+  pgdata:
+  miniodata:
+  clamdata:

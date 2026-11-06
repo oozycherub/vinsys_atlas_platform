@@ -1,0 +1,61 @@
+# The judge API, event consumer and queue maintenance. Runs on the general pool (no user code).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sandbox-api
+  namespace: atlas-sandbox
+  labels: { app.kubernetes.io/name: sandbox-api }
+spec:
+  replicas: {{ .Values.api.replicas }}
+  selector: { matchLabels: { app.kubernetes.io/name: sandbox-api } }
+  template:
+    metadata: { labels: { app.kubernetes.io/name: sandbox-api } }
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      nodeSelector: { atlas.dev/pool: general }
+      securityContext: { runAsNonRoot: true, runAsUser: 10001, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: api
+          image: '{{ .Values.registry }}/{{ .Values.api.image }}'
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities: { drop: [ALL] }
+          env:
+            - { name: NODE_ENV, value: production }
+            - { name: ATLAS_SANDBOX_PORT, value: '{{ .Values.api.port }}' }
+            - { name: ATLAS_SANDBOX_EVENT_SOURCE, value: kafka }
+            - { name: ATLAS_KAFKA_BROKERS, value: 'kafka.atlas-data:9092' }
+            - name: ATLAS_DATABASE_URL
+              valueFrom: { secretKeyRef: { name: '{{ .Values.secrets.database }}', key: url } }
+            - name: ATLAS_S3_ENDPOINT
+              valueFrom: { secretKeyRef: { name: '{{ .Values.secrets.objectStorage }}', key: endpoint } }
+            - name: ATLAS_S3_ACCESS_KEY
+              valueFrom: { secretKeyRef: { name: '{{ .Values.secrets.objectStorage }}', key: access-key } }
+            - name: ATLAS_S3_SECRET_KEY
+              valueFrom: { secretKeyRef: { name: '{{ .Values.secrets.objectStorage }}', key: secret-key } }
+            - name: ATLAS_AUTH_ISSUER
+              valueFrom: { secretKeyRef: { name: '{{ .Values.secrets.auth }}', key: issuer } }
+            - name: ATLAS_AUTH_AUDIENCE
+              valueFrom: { secretKeyRef: { name: '{{ .Values.secrets.auth }}', key: audience } }
+            - name: ATLAS_AUTH_JWKS_URL
+              valueFrom: { secretKeyRef: { name: '{{ .Values.secrets.auth }}', key: jwks-url } }
+          ports: [{ name: http, containerPort: {{ .Values.api.port }} }]
+          livenessProbe: { httpGet: { path: /healthz, port: http } }
+          readinessProbe: { httpGet: { path: /readyz, port: http } }
+          resources: {{ toJson .Values.api.resources }}
+---
+apiVersion: v1
+kind: Service
+metadata: { name: sandbox-svc, namespace: atlas-sandbox }
+spec:
+  selector: { app.kubernetes.io/name: sandbox-api }
+  ports: [{ name: http, port: {{ .Values.api.port }}, targetPort: http }]
+---
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata: { name: sandbox-api, namespace: atlas-sandbox }
+spec:
+  minAvailable: 2
+  selector: { matchLabels: { app.kubernetes.io/name: sandbox-api } }

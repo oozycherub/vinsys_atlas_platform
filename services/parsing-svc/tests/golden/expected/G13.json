@@ -1,0 +1,77 @@
+{
+  "id": "G13",
+  "format": "txt",
+  "contact": {
+    "full_name": "Nadim Lindqvist",
+    "email": "nadim.lindqvist13@mailbox.example",
+    "phone": "+31 6 9058 5179"
+  },
+  "location": "Tampere, Finland",
+  "summary": "Analytics Engineer with experience in Python, Java, SQL.",
+  "work_history": [
+    {
+      "title": "Analytics Engineer",
+      "employer": "Bluefjord Analytics",
+      "start": "2022-10",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Designed deployment tooling with Python and Java",
+        "Built batch jobs using SQL"
+      ],
+      "skills": [
+        "Python",
+        "Java",
+        "SQL"
+      ]
+    },
+    {
+      "title": "Software Engineer",
+      "employer": "Granite Peak Retail",
+      "start": "2019-02",
+      "end": "2022-10",
+      "is_current": false,
+      "responsibilities": [
+        "Maintained deployment tooling with GraphQL and TypeScript",
+        "Scaled batch jobs using Airflow"
+      ],
+      "skills": [
+        "GraphQL",
+        "TypeScript",
+        "Airflow"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Northgate College of Engineering",
+      "degree": "MSc",
+      "field": "Data Science",
+      "end_year": 2018
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Certified Kubernetes Administrator",
+      "issuer": "CNCF",
+      "issued": "2024-11"
+    }
+  ],
+  "skills": [
+    "Python",
+    "Java",
+    "SQL",
+    "GraphQL",
+    "TypeScript",
+    "Airflow",
+    "Terraform",
+    "Pandas",
+    "Redis"
+  ],
+  "skills_line_extra": [
+    "Terraform",
+    "Pandas",
+    "Redis"
+  ],
+  "file": "G13.txt"
+}

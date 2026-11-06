@@ -1,0 +1,96 @@
+{
+  "id": "G47",
+  "format": "docx",
+  "contact": {
+    "full_name": "Wren Jaramillo",
+    "email": "wren.jaramillo47@mailbox.example",
+    "phone": "+31 6 2293 5253"
+  },
+  "location": "Valencia, Spain",
+  "summary": "Machine Learning Engineer with experience in Java, Snowflake, dbt.",
+  "work_history": [
+    {
+      "title": "Machine Learning Engineer",
+      "employer": "Cobalt Harbor Insurance",
+      "start": "2023-08",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Automated reporting services with Java and Snowflake",
+        "Designed event pipelines using dbt"
+      ],
+      "skills": [
+        "Java",
+        "Snowflake",
+        "dbt"
+      ]
+    },
+    {
+      "title": "Site Reliability Engineer",
+      "employer": "Copperleaf Health",
+      "start": "2021-02",
+      "end": "2023-09",
+      "is_current": false,
+      "responsibilities": [
+        "Automated batch jobs with Kafka and Grafana",
+        "Maintained event pipelines using TypeScript"
+      ],
+      "skills": [
+        "Kafka",
+        "Grafana",
+        "TypeScript"
+      ]
+    },
+    {
+      "title": "Platform Engineer",
+      "employer": "Ironbark Robotics",
+      "start": "2018-12",
+      "end": "2021-02",
+      "is_current": false,
+      "responsibilities": [
+        "Migrated deployment tooling with Docker and PyTorch",
+        "Migrated deployment tooling using PostgreSQL"
+      ],
+      "skills": [
+        "Docker",
+        "PyTorch",
+        "PostgreSQL"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Riverbend Polytechnic",
+      "degree": "MSc",
+      "field": "Applied Mathematics",
+      "end_year": 2017
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Terraform Associate",
+      "issuer": "HashiCorp",
+      "issued": "2024-08"
+    }
+  ],
+  "skills": [
+    "Java",
+    "Snowflake",
+    "dbt",
+    "Kafka",
+    "Grafana",
+    "TypeScript",
+    "Docker",
+    "PyTorch",
+    "PostgreSQL",
+    "Airflow",
+    "SQL",
+    "Redis"
+  ],
+  "skills_line_extra": [
+    "Airflow",
+    "SQL",
+    "Redis"
+  ],
+  "file": "G47.docx"
+}

@@ -1,0 +1,22 @@
+Nadim Lindqvist
+nadim.lindqvist13@mailbox.example | +31 6 9058 5179 | Tampere, Finland
+Ref: G13
+Summary
+Analytics Engineer with experience in Python, Java, SQL.
+Experience
+Analytics Engineer - Bluefjord Analytics
+Oct 2022 - Present
+* Designed deployment tooling with Python and Java
+* Built batch jobs using SQL
+Software Engineer - Granite Peak Retail
+Feb 2019 - Oct 2022
+* Maintained deployment tooling with GraphQL and TypeScript
+* Scaled batch jobs using Airflow
+Education
+MSc in Data Science, Northgate College of Engineering, 2018
+Certifications
+Certified Kubernetes Administrator - CNCF, Nov 2024
+Skills
+Python, Java, SQL, GraphQL
+TypeScript, Airflow, Terraform, Pandas
+Redis

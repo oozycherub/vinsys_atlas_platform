@@ -1,0 +1,77 @@
+{
+  "id": "G29",
+  "format": "pdf",
+  "contact": {
+    "full_name": "Elif Dovrat",
+    "email": "elif.dovrat29@mailbox.example",
+    "phone": "+31 6 6053 9600"
+  },
+  "location": "Porto, Portugal",
+  "summary": "Platform Engineer with experience in GraphQL, Redis, TypeScript.",
+  "work_history": [
+    {
+      "title": "Platform Engineer",
+      "employer": "Orbitfield Labs",
+      "start": "2022-09",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Migrated deployment tooling with GraphQL and Redis",
+        "Built deployment tooling using TypeScript"
+      ],
+      "skills": [
+        "GraphQL",
+        "Redis",
+        "TypeScript"
+      ]
+    },
+    {
+      "title": "Site Reliability Engineer",
+      "employer": "Lanternfish Media",
+      "start": "2019-05",
+      "end": "2022-07",
+      "is_current": false,
+      "responsibilities": [
+        "Scaled event pipelines with Scala and Pandas",
+        "Migrated reporting services using PostgreSQL"
+      ],
+      "skills": [
+        "Scala",
+        "Pandas",
+        "PostgreSQL"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Ashford Technical University",
+      "degree": "MSc",
+      "field": "Data Science",
+      "end_year": 2017
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Certified Kubernetes Administrator",
+      "issuer": "CNCF",
+      "issued": "2024-01"
+    }
+  ],
+  "skills": [
+    "GraphQL",
+    "Redis",
+    "TypeScript",
+    "Scala",
+    "Pandas",
+    "PostgreSQL",
+    "Python",
+    "Terraform",
+    "Linux"
+  ],
+  "skills_line_extra": [
+    "Python",
+    "Terraform",
+    "Linux"
+  ],
+  "file": "G29.pdf"
+}

@@ -1,0 +1,26 @@
+Nadim Grimaldo
+nadim.grimaldo38@mailbox.example | +31 6 2851 2166 | Leeds, United Kingdom
+Ref: G38
+Summary
+Site Reliability Engineer with experience in Go, Snowflake, SQL.
+Experience
+Site Reliability Engineer - Quarry Lane Software
+Feb 2024 - Present
+* Scaled customer APIs with Go and Snowflake
+* Designed event pipelines using SQL
+Senior Data Engineer - Silverline Payments
+Oct 2022 - May 2024
+* Migrated batch jobs with AWS and Spark
+* Scaled data models using Scala
+Senior Data Engineer - Northwind Systems
+Aug 2018 - Jun 2022
+* Designed data models with GraphQL and Elasticsearch
+* Migrated reporting services using React
+Education
+BEng in Software Engineering, Northgate College of Engineering, 2018
+Certifications
+Google Professional Data Engineer - Google Cloud, Aug 2024
+Skills
+Go, Snowflake, SQL, AWS
+Spark, Scala, GraphQL, Elasticsearch
+React, Airflow, Redis, dbt

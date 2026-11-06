@@ -1,0 +1,96 @@
+{
+  "id": "G37",
+  "format": "docx",
+  "contact": {
+    "full_name": "Mirela Thorvaldsen",
+    "email": "mirela.thorvaldsen37@mailbox.example",
+    "phone": "+31 6 2380 8208"
+  },
+  "location": "Gdansk, Poland",
+  "summary": "Platform Engineer with experience in SQL, Python, Go.",
+  "work_history": [
+    {
+      "title": "Platform Engineer",
+      "employer": "Bluefjord Analytics",
+      "start": "2022-02",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Automated reporting services with SQL and Python",
+        "Scaled reporting services using Go"
+      ],
+      "skills": [
+        "SQL",
+        "Python",
+        "Go"
+      ]
+    },
+    {
+      "title": "Senior Data Engineer",
+      "employer": "Granite Peak Retail",
+      "start": "2018-01",
+      "end": "2022-09",
+      "is_current": false,
+      "responsibilities": [
+        "Maintained customer APIs with Kubernetes and Java",
+        "Scaled event pipelines using Spark"
+      ],
+      "skills": [
+        "Kubernetes",
+        "Java",
+        "Spark"
+      ]
+    },
+    {
+      "title": "Backend Engineer",
+      "employer": "Cobalt Harbor Insurance",
+      "start": "2015-05",
+      "end": "2018-01",
+      "is_current": false,
+      "responsibilities": [
+        "Migrated deployment tooling with Pandas and PyTorch",
+        "Designed data models using TypeScript"
+      ],
+      "skills": [
+        "Pandas",
+        "PyTorch",
+        "TypeScript"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Riverbend Polytechnic",
+      "degree": "MSc",
+      "field": "Data Science",
+      "end_year": 2013
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Certified Kubernetes Administrator",
+      "issuer": "CNCF",
+      "issued": "2024-07"
+    }
+  ],
+  "skills": [
+    "SQL",
+    "Python",
+    "Go",
+    "Kubernetes",
+    "Java",
+    "Spark",
+    "Pandas",
+    "PyTorch",
+    "TypeScript",
+    "AWS",
+    "dbt",
+    "Docker"
+  ],
+  "skills_line_extra": [
+    "AWS",
+    "dbt",
+    "Docker"
+  ],
+  "file": "G37.docx"
+}

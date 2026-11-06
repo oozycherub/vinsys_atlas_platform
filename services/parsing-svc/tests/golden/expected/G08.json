@@ -1,0 +1,96 @@
+{
+  "id": "G08",
+  "format": "txt",
+  "contact": {
+    "full_name": "Ines Quintanilla",
+    "email": "ines.quintanilla8@mailbox.example",
+    "phone": "+31 6 9516 8292"
+  },
+  "location": "Porto, Portugal",
+  "summary": "Backend Engineer with experience in Spark, SQL, Elasticsearch.",
+  "work_history": [
+    {
+      "title": "Backend Engineer",
+      "employer": "Meadowbrook Energy",
+      "start": "2024-12",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Scaled data models with Spark and SQL",
+        "Built data models using Elasticsearch"
+      ],
+      "skills": [
+        "Spark",
+        "SQL",
+        "Elasticsearch"
+      ]
+    },
+    {
+      "title": "Software Engineer",
+      "employer": "Bluefjord Analytics",
+      "start": "2021-11",
+      "end": "2024-01",
+      "is_current": false,
+      "responsibilities": [
+        "Migrated reporting services with PyTorch and Java",
+        "Automated event pipelines using PostgreSQL"
+      ],
+      "skills": [
+        "PyTorch",
+        "Java",
+        "PostgreSQL"
+      ]
+    },
+    {
+      "title": "Machine Learning Engineer",
+      "employer": "Granite Peak Retail",
+      "start": "2019-03",
+      "end": "2021-12",
+      "is_current": false,
+      "responsibilities": [
+        "Built event pipelines with dbt and AWS",
+        "Designed reporting services using Redis"
+      ],
+      "skills": [
+        "dbt",
+        "AWS",
+        "Redis"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Northgate College of Engineering",
+      "degree": "BSc",
+      "field": "Computer Science",
+      "end_year": 2019
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "AWS Certified Solutions Architect",
+      "issuer": "Amazon Web Services",
+      "issued": "2024-08"
+    }
+  ],
+  "skills": [
+    "Spark",
+    "SQL",
+    "Elasticsearch",
+    "PyTorch",
+    "Java",
+    "PostgreSQL",
+    "dbt",
+    "AWS",
+    "Redis",
+    "Terraform",
+    "Kubernetes",
+    "Grafana"
+  ],
+  "skills_line_extra": [
+    "Terraform",
+    "Kubernetes",
+    "Grafana"
+  ],
+  "file": "G08.txt"
+}

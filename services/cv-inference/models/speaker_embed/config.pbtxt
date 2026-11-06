@@ -1,0 +1,8 @@
+# ECAPA-TDNN speaker embedding (192-d) for speaker counting, ONNX, 16 kHz mono.
+name: "speaker_embed"
+platform: "onnxruntime_onnx"
+max_batch_size: 8
+input [ { name: "input", data_type: TYPE_FP32, dims: [ -1 ] } ]
+output [ { name: "embedding", data_type: TYPE_FP32, dims: [ 192 ] } ]
+dynamic_batching { max_queue_delay_microseconds: 10000 }
+instance_group [ { kind: KIND_GPU, count: 1 } ]

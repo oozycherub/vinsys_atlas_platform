@@ -1,0 +1,77 @@
+# Runtime detection on sandbox nodes (PRD §2.2d, §4.2). Candidate code runs inside isolate boxes
+# (processes whose cwd is /box) inside gVisor pods. Any of these firing is an incident: alerts go
+# to on-call, and the quarterly red-team run (test/attacks/) must trigger none of them.
+
+- list: judge_worker_binaries
+  items: [judge-worker, isolate, isolate-cg-keeper, judge-entrypoint]
+
+- macro: sandbox_ns
+  condition: k8s.ns.name = "atlas-sandbox"
+
+- macro: judge_pod
+  condition: (sandbox_ns and k8s.pod.label.app.kubernetes.io/name = "judge-worker")
+
+- macro: in_box
+  condition: (proc.cwd startswith "/box" or proc.aname[1] = "isolate" or proc.aname[2] = "isolate")
+
+- rule: Judge pod outbound connection outside the allow-list
+  desc: Workers talk to PgBouncer and object storage only; boxes have no network at all.
+  condition: >
+    judge_pod and evt.type in (connect, sendto) and evt.dir = < and fd.type in (ipv4, ipv6)
+    and not fd.sport in (53) and not fd.sip.name contains "pgbouncer"
+    and not fd.sip.name contains "s3."
+  output: Unexpected connection from a judge pod (proc=%proc.name cmd=%proc.cmdline dest=%fd.name pod=%k8s.pod.name)
+  priority: CRITICAL
+  tags: [sandbox, network, exfiltration]
+
+- rule: Network activity from candidate code
+  desc: A boxed process opened a socket that is not loopback (should be impossible in an empty netns).
+  condition: judge_pod and in_box and evt.type = socket and evt.dir = < and not fd.typechar = u
+  output: Socket from a box (proc=%proc.name cmd=%proc.cmdline pod=%k8s.pod.name)
+  priority: CRITICAL
+  tags: [sandbox, escape]
+
+- rule: Shell in a judge pod outside a box
+  desc: Nobody execs into judge pods; shells outside isolate mean an escape or an intrusion.
+  condition: >
+    judge_pod and spawned_process and proc.name in (sh, bash, dash, ash, zsh)
+    and not in_box and not proc.pname in (judge-entrypoint)
+  output: Shell outside a box (cmd=%proc.cmdline parent=%proc.pname pod=%k8s.pod.name)
+  priority: CRITICAL
+  tags: [sandbox, escape]
+
+- rule: Box process reads worker secrets or host paths
+  desc: Candidate code touching worker configuration, secrets or isolate state.
+  condition: >
+    judge_pod and in_box and open_read and
+    (fd.name startswith /var/run/secrets or fd.name startswith /var/local/lib/isolate
+     or fd.name startswith /var/cache/atlas-judge or fd.name startswith /proc/1/
+     or fd.name startswith /sys/fs/cgroup)
+  output: Box read a protected path (file=%fd.name cmd=%proc.cmdline pod=%k8s.pod.name)
+  priority: CRITICAL
+  tags: [sandbox, escape]
+
+- rule: Privileged syscall from a box
+  desc: ptrace, mount, keyctl, bpf, perf_event_open, unshare or setns from candidate code.
+  condition: >
+    judge_pod and in_box and evt.dir = <
+    and evt.type in (ptrace, mount, umount2, keyctl, bpf, perf_event_open, unshare, setns, init_module, finit_module)
+  output: Privileged syscall from a box (syscall=%evt.type cmd=%proc.cmdline pod=%k8s.pod.name)
+  priority: CRITICAL
+  tags: [sandbox, escape]
+
+- rule: Unexpected binary in a judge pod
+  desc: Processes outside boxes must be the worker, isolate or its keeper.
+  condition: >
+    judge_pod and spawned_process and not in_box
+    and not proc.name in (judge_worker_binaries)
+  output: Unexpected process (proc=%proc.name cmd=%proc.cmdline parent=%proc.pname pod=%k8s.pod.name)
+  priority: WARNING
+  tags: [sandbox]
+
+- rule: Write below /etc or /usr in a judge pod
+  desc: Images are immutable at run time; boxes mount them read-only.
+  condition: judge_pod and open_write and (fd.name startswith /etc or fd.name startswith /usr)
+  output: Write to the image filesystem (file=%fd.name cmd=%proc.cmdline pod=%k8s.pod.name)
+  priority: ERROR
+  tags: [sandbox, tamper]

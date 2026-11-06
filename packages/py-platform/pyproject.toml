@@ -1,0 +1,22 @@
+[project]
+name = "atlas-platform"
+version = "0.1.0"
+description = "Shared runtime for Atlas Python services: tenancy-aware DB access, auth, problem+json, outbox, ids, logging"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "fastapi==0.159.1",
+    "psycopg[binary]==3.3.6",
+    "psycopg-pool==3.3.3",
+    "pyjwt[crypto]==2.15.1",
+    "httpx==0.28.1",
+]
+
+[project.optional-dependencies]
+pii = ["presidio-analyzer==2.2.364", "spacy==3.8.16"]
+
+[build-system]
+requires = ["hatchling==1.27.0"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/atlas_platform"]

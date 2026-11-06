@@ -1,0 +1,627 @@
+openapi: 3.1.0
+info:
+  title: Atlas llm-gateway
+  description: Model routing, PII redaction, budgets, prompt registry and embeddings (brick 5).
+  version: 1.0.0
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+paths:
+  /v1/llm/messages:
+    post:
+      tags:
+      - llm
+      summary: Messages
+      operationId: messages_v1_llm_messages_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessagesBody'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Messages V1 Llm Messages Post
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+  /v1/llm/messages:stream:
+    post:
+      tags:
+      - llm
+      summary: Messages Stream
+      operationId: messages_stream_v1_llm_messages_stream_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MessagesBody'
+        required: true
+      responses:
+        '200':
+          description: 'Server-sent events: meta, delta*, then done or error.'
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '422':
+          $ref: '#/components/responses/422'
+        '429':
+          $ref: '#/components/responses/429'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+  /v1/embeddings:
+    post:
+      tags:
+      - embeddings
+      summary: Embeddings
+      operationId: embeddings_v1_embeddings_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmbeddingsBody'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Embeddings V1 Embeddings Post
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '429':
+          $ref: '#/components/responses/429'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+  /v1/prompts:
+    post:
+      tags:
+      - prompts
+      summary: Register Prompt
+      operationId: register_prompt_v1_prompts_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PromptBody'
+        required: true
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Register Prompt V1 Prompts Post
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '409':
+          $ref: '#/components/responses/409'
+  /v1/prompts/{prompt_id}/versions:
+    get:
+      tags:
+      - prompts
+      summary: Prompt Versions
+      operationId: prompt_versions_v1_prompts__prompt_id__versions_get
+      parameters:
+      - name: prompt_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Prompt Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Prompt Versions V1 Prompts  Prompt Id  Versions Get
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+  /v1/prompts/{ref}:
+    get:
+      tags:
+      - prompts
+      summary: Get Prompt
+      operationId: get_prompt_v1_prompts__ref__get
+      parameters:
+      - name: ref
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Ref
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Prompt V1 Prompts  Ref  Get
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+  /v1/prompts/{prompt_id}/versions/{version}:retire:
+    post:
+      tags:
+      - prompts
+      summary: Retire Prompt
+      operationId: retire_prompt_v1_prompts__prompt_id__versions__version__retire_post
+      parameters:
+      - name: prompt_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Prompt Id
+      - name: version
+        in: path
+        required: true
+        schema:
+          type: integer
+          title: Version
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Retire Prompt V1 Prompts  Prompt Id  Versions  Version  Retire Post
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+  /v1/tenants/{tenant_id}/ai-budget:
+    get:
+      tags:
+      - budgets
+      summary: Get Budget
+      operationId: get_budget_v1_tenants__tenant_id__ai_budget_get
+      parameters:
+      - name: tenant_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Budget V1 Tenants  Tenant Id  Ai Budget Get
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+    put:
+      tags:
+      - budgets
+      summary: Put Budget
+      operationId: put_budget_v1_tenants__tenant_id__ai_budget_put
+      parameters:
+      - name: tenant_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Tenant Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BudgetBody'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Put Budget V1 Tenants  Tenant Id  Ai Budget Put
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+components:
+  schemas:
+    BudgetBody:
+      properties:
+        monthly_tokens:
+          type: integer
+          maximum: 1000000000000.0
+          minimum: 0.0
+          title: Monthly Tokens
+        monthly_gpu_seconds:
+          type: number
+          maximum: 1000000000.0
+          minimum: 0.0
+          title: Monthly Gpu Seconds
+        soft_ratio:
+          type: number
+          exclusiveMaximum: 1.0
+          exclusiveMinimum: 0.0
+          title: Soft Ratio
+          default: 0.8
+      additionalProperties: false
+      type: object
+      required:
+      - monthly_tokens
+      - monthly_gpu_seconds
+      title: BudgetBody
+    EmbeddingsBody:
+      properties:
+        model:
+          type: string
+          maxLength: 100
+          title: Model
+        input:
+          items:
+            type: string
+            maxLength: 32000
+          type: array
+          maxItems: 64
+          minItems: 1
+          title: Input
+        purpose:
+          type: string
+          pattern: ^[a-z][a-z0-9_]{2,60}$
+          title: Purpose
+        tenant_id:
+          anyOf:
+          - type: string
+            pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          - type: 'null'
+          title: Tenant Id
+      additionalProperties: false
+      type: object
+      required:
+      - model
+      - input
+      - purpose
+      title: EmbeddingsBody
+    MessagesBody:
+      properties:
+        tenant_id:
+          type: string
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          title: Tenant Id
+        purpose:
+          type: string
+          pattern: ^[a-z][a-z0-9_]{2,60}$
+          title: Purpose
+        prompt:
+          type: string
+          maxLength: 100
+          title: Prompt
+          description: prompt_id@version, e.g. "resume.extract@3"
+        variables:
+          additionalProperties:
+            type: string
+            maxLength: 400000
+          type: object
+          title: Variables
+        known_pii:
+          items:
+            type: string
+            maxLength: 500
+          type: array
+          maxItems: 50
+          title: Known Pii
+          description: 'PII the caller already knows (name, email, phone): always redacted, even if NER
+            misses it.'
+        tools:
+          anyOf:
+          - items:
+              additionalProperties: true
+              type: object
+            type: array
+            maxItems: 32
+          - type: 'null'
+          title: Tools
+        session_id:
+          anyOf:
+          - type: string
+            pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          - type: 'null'
+          title: Session Id
+        tool_results:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/ToolResult'
+            type: array
+            maxItems: 32
+          - type: 'null'
+          title: Tool Results
+      additionalProperties: false
+      type: object
+      required:
+      - tenant_id
+      - purpose
+      - prompt
+      title: MessagesBody
+    PromptBody:
+      properties:
+        prompt_id:
+          type: string
+          pattern: ^[a-z][a-z0-9_.-]{2,80}$
+          title: Prompt Id
+        version:
+          type: integer
+          maximum: 999999.0
+          minimum: 1.0
+          title: Version
+        purpose:
+          type: string
+          pattern: ^[a-z][a-z0-9_]{2,60}$
+          title: Purpose
+        route:
+          type: string
+          enum:
+          - primary
+          - fast
+          - eval
+          title: Route
+        system_template:
+          type: string
+          maxLength: 50000
+          title: System Template
+        user_template:
+          type: string
+          maxLength: 50000
+          title: User Template
+        variables:
+          additionalProperties:
+            $ref: '#/components/schemas/VariableBody'
+          type: object
+          title: Variables
+        output_schema:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Output Schema
+        contains_candidate_text:
+          type: boolean
+          title: Contains Candidate Text
+        reidentify_fields:
+          items:
+            type: string
+          type: array
+          maxItems: 50
+          title: Reidentify Fields
+        effort:
+          type: string
+          enum:
+          - low
+          - medium
+          - high
+          - xhigh
+          - max
+          title: Effort
+          default: medium
+        max_tokens:
+          type: integer
+          maximum: 64000.0
+          minimum: 1.0
+          title: Max Tokens
+          default: 4096
+        deterministic:
+          type: boolean
+          title: Deterministic
+          default: false
+      additionalProperties: false
+      type: object
+      required:
+      - prompt_id
+      - version
+      - purpose
+      - route
+      - system_template
+      - user_template
+      - contains_candidate_text
+      title: PromptBody
+    ToolResult:
+      properties:
+        tool_use_id:
+          type: string
+          maxLength: 200
+          minLength: 1
+          title: Tool Use Id
+        content:
+          anyOf:
+          - type: string
+          - items:
+              additionalProperties: true
+              type: object
+            type: array
+          - additionalProperties: true
+            type: object
+          title: Content
+          default: ''
+        is_error:
+          type: boolean
+          title: Is Error
+          default: false
+      additionalProperties: false
+      type: object
+      required:
+      - tool_use_id
+      title: ToolResult
+    VariableBody:
+      properties:
+        required:
+          type: boolean
+          title: Required
+          default: true
+        untrusted:
+          type: boolean
+          title: Untrusted
+          default: false
+      additionalProperties: false
+      type: object
+      title: VariableBody
+    Problem:
+      type: object
+      description: RFC 9457 problem document; `code` is the stable machine-readable error.
+      required:
+      - type
+      - title
+      - status
+      - code
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        code:
+          type: string
+        request_id:
+          type: string
+      additionalProperties: true
+  responses:
+    '400':
+      description: Invalid request (VALIDATION_FAILED and others).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '401':
+      description: Missing or invalid bearer token.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '403':
+      description: The caller lacks the role, scope or tenant.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '404':
+      description: Prompt or session not found.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '409':
+      description: 'PROMPT_VERSION_EXISTS: versions are immutable.'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '422':
+      description: Domain rule (PURPOSE_MISMATCH, PROMPT_RETIRED, MODEL_REFUSED).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '429':
+      description: BUDGET_EXCEEDED; Retry-After gives seconds until the budget resets.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '502':
+      description: OUTPUT_SCHEMA_VIOLATION after a repair attempt, or PROVIDER_REJECTED.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '503':
+      description: PROVIDER_UNAVAILABLE after failover, or REDACTION_FAILED (fail closed).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Service tokens (role `service`; scopes `llm:invoke`, `embeddings:create`, `prompts:write`)
+        or staff tokens for prompt and budget administration.
+servers:
+- url: https://llm-gateway.internal.atlas.dev
+security:
+- bearer: []

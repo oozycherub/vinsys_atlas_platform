@@ -1,0 +1,795 @@
+openapi: 3.1.0
+info:
+  title: Atlas taxonomy-svc
+  version: 1.0.0
+  license: { name: Proprietary, identifier: LicenseRef-Proprietary }
+  description: >
+    Skill graph, normalisation and job profiles (docs/prompts/03-taxonomy-svc.md). The global
+    taxonomy (tenant_id null) is curated by super_admin; tenants add overlays and their own nodes.
+    Reads: any tenant user, platform staff, service principals. Writes: tenant_admin (own tenant)
+    and the super_admin curator (global, or a tenant via tenant_id). All errors are RFC 9457
+    problem documents. Custom methods follow AIP-136 (`/{id}:verb`).
+servers:
+  - url: http://localhost:8083
+security:
+  - bearer: []
+
+paths:
+  /v1/skills:
+    get:
+      operationId: listSkills
+      summary: 'List skills visible to the caller (global + own tenant, minus hidden), ordered by path.'
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - { name: path, in: query, description: Subtree (ltree), schema: { type: string } }
+        - {
+            name: q,
+            in: query,
+            description: Name or alias search,
+            schema: { type: string, maxLength: 100 },
+          }
+        - {
+            name: classification,
+            in: query,
+            schema: { $ref: '#/components/schemas/Classification' },
+          }
+        - { name: node_type, in: query, schema: { $ref: '#/components/schemas/NodeType' } }
+        - {
+            name: include_deprecated,
+            in: query,
+            schema: { type: string, enum: ['true', 'false'], default: 'false' },
+          }
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 200, default: 50 },
+          }
+        - { name: cursor, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: A page of skills.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, next_cursor]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/Skill' } }
+                  next_cursor: { type: [string, 'null'] }
+        '400': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createSkill
+      summary: 'Create a node (tenant node for tenant_admin; global node for the curator).'
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateSkillRequest' }
+      responses:
+        '201': { $ref: '#/components/responses/SkillWithETag' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+
+  /v1/skills:normalize:
+    post:
+      operationId: normalizeSkills
+      summary: 'Raw strings → canonical skills: alias (1.0), then nearest neighbour (≥ 0.82), else none.'
+      description: >
+        Cosine 0.70–0.82 returns null and queues the term in the tenant's skill suggestions.
+        Deprecated matches resolve to their successor. Hidden skills never match.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [terms]
+              properties:
+                tenant_id: { type: string, format: uuid, description: Platform principals only. }
+                terms:
+                  {
+                    type: array,
+                    minItems: 1,
+                    maxItems: 100,
+                    items: { type: string, maxLength: 200 },
+                  }
+      responses:
+        '200':
+          description: One result per term, in order.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [results]
+                properties:
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      required: [term, skill_id, confidence, method]
+                      properties:
+                        term: { type: string }
+                        skill_id: { type: [string, 'null'], format: uuid }
+                        confidence: { type: number, minimum: 0, maximum: 1 }
+                        method: { type: string, enum: [alias, ann, none] }
+        '400': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+
+  /v1/skills/{skillId}:
+    parameters:
+      - $ref: '#/components/parameters/SkillId'
+      - $ref: '#/components/parameters/TenantId'
+    get:
+      operationId: getSkill
+      summary: 'A skill with ancestors, related skills and (if deprecated) its active successor.'
+      responses:
+        '200':
+          description: The skill.
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SkillDetail' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: patchSkill
+      summary: 'Edit name, description, classification, aliases or external id. The path is immutable.'
+      description: Tenants edit only their own nodes (global → 403 GLOBAL_SKILL_READ_ONLY; use the override).
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PatchSkillRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/SkillWithETag' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '412': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '428': { $ref: '#/components/responses/Problem' }
+
+  /v1/skills/{skillId}:deprecate:
+    $ref: '#/components/pathItems/deprecateSkill'
+
+  /v1/skills/{skillId}/override:
+    parameters:
+      - $ref: '#/components/parameters/SkillId'
+      - $ref: '#/components/parameters/TenantId'
+    put:
+      operationId: putSkillOverride
+      summary: 'Tenant overlay on a global skill: hide, adopt, rename, extra aliases. Roles: tenant_admin, super_admin (with tenant_id).'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                hidden: { type: boolean, default: false }
+                adopted: { type: boolean, default: false }
+                display_name: { type: [string, 'null'], maxLength: 200 }
+                aliases: { type: array, maxItems: 50, items: { type: string } }
+      responses:
+        '200':
+          description: The skill as the tenant now sees it.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Skill' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '412': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteSkillOverride
+      summary: Remove the tenant's overlay.
+      responses:
+        '204': { description: Removed. }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /v1/skill-edges:
+    post:
+      operationId: addSkillEdge
+      summary: 'Add RELATED_TO (symmetric) or PREREQUISITE_OF (no cycles) between active leaf skills.'
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [src, dst, edge_type]
+              properties:
+                src: { type: string, format: uuid }
+                dst: { type: string, format: uuid }
+                edge_type: { type: string, enum: [RELATED_TO, PREREQUISITE_OF] }
+                weight: { type: number, exclusiveMinimum: 0, maximum: 1, default: 1 }
+      responses:
+        '201': { description: Created. }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: removeSkillEdge
+      summary: Remove an edge of the caller's scope.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - { name: src, in: query, required: true, schema: { type: string, format: uuid } }
+        - { name: dst, in: query, required: true, schema: { type: string, format: uuid } }
+        - {
+            name: edge_type,
+            in: query,
+            required: true,
+            schema: { type: string, enum: [RELATED_TO, PREREQUISITE_OF] },
+          }
+      responses:
+        '204': { description: Removed. }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /v1/skill-suggestions:
+    get:
+      operationId: listSkillSuggestions
+      summary: 'Weakly matched raw terms (cosine 0.70–0.82) for taxonomy admins. Per tenant.'
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 500, default: 100 },
+          }
+      responses:
+        '200': { description: 'Suggestions, most frequent first.' }
+
+  /v1/taxonomy/version:
+    get:
+      operationId: getTaxonomyVersion
+      summary: Published version of the caller's scope and how many skills changed since.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: Version info.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tenant_id: { type: [string, 'null'] }
+                  published_version: { type: integer }
+                  pending_changes: { type: integer }
+
+  /v1/taxonomy:publish:
+    post:
+      operationId: publishTaxonomy
+      summary: 'Publish pending changes as the next version; emits taxonomy.version.published.v1.'
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200': { description: 'Published: {version, changed_skills}.' }
+        '422': { $ref: '#/components/responses/Problem' }
+
+  /v1/taxonomy:reembed:
+    post:
+      operationId: reembedTaxonomy
+      summary: Embed active skills with no vector from the current model (after a model change or outage).
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 1000, default: 200 },
+          }
+      responses:
+        '200': { description: '{embedded, remaining}' }
+        '503': { $ref: '#/components/responses/Problem' }
+
+  /v1/taxonomy-imports:
+    post:
+      operationId: uploadTaxonomyImport
+      summary: 'Upload a .csv or .xlsx (≤ 5 MB, ≤ 5000 rows) and get a dry-run diff, kept for 24 h.'
+      description: >
+        Columns: path, node_type, name (required); description, classification, aliases
+        (separated by ; or |), external_id. Imports create and update; they never delete.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, contentMediaType: application/octet-stream }
+      responses:
+        '201':
+          description: Dry run stored.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Import' }
+        '400': { $ref: '#/components/responses/Problem' }
+
+  /v1/taxonomy-imports/{importId}:
+    get:
+      operationId: getTaxonomyImport
+      summary: A stored dry run or committed import.
+      parameters:
+        - { name: importId, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: The import.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Import' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /v1/taxonomy-imports/{importId}:commit:
+    $ref: '#/components/pathItems/commitImport'
+
+  /v1/job-families:
+    get:
+      operationId: listJobFamilies
+      summary: Job families of the tenant.
+      parameters: [{ $ref: '#/components/parameters/TenantId' }]
+      responses:
+        '200': { description: '{items}' }
+    post:
+      operationId: createJobFamily
+      summary: Create a job family.
+      parameters: [{ $ref: '#/components/parameters/TenantId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              {
+                type: object,
+                required: [name],
+                properties: { name: { type: string, maxLength: 200 } },
+              }
+      responses:
+        '201': { description: Created. }
+        '409': { $ref: '#/components/responses/Problem' }
+
+  /v1/job-roles:
+    get:
+      operationId: listJobRoles
+      summary: Job roles, optionally of one family.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - { name: job_family_id, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200': { description: '{items}' }
+    post:
+      operationId: createJobRole
+      summary: Create a job role in a family.
+      parameters: [{ $ref: '#/components/parameters/TenantId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [job_family_id, name]
+              properties:
+                job_family_id: { type: string, format: uuid }
+                name: { type: string, maxLength: 200 }
+                level: { type: [string, 'null'], maxLength: 50 }
+      responses:
+        '201': { description: Created. }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+
+  /v1/job-profiles:
+    get:
+      operationId: listJobProfiles
+      summary: Job profiles, newest first.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - { name: status, in: query, schema: { type: string, enum: [draft, published, archived] } }
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 100, default: 20 },
+          }
+        - { name: cursor, in: query, schema: { type: string } }
+      responses:
+        '200': { description: '{items, next_cursor}' }
+    post:
+      operationId: createJobProfile
+      summary: Create a draft job profile.
+      parameters: [{ $ref: '#/components/parameters/TenantId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [title]
+              properties:
+                title: { type: string, maxLength: 200 }
+                description: { type: [string, 'null'] }
+                job_role_id: { type: [string, 'null'], format: uuid }
+      responses:
+        '201': { $ref: '#/components/responses/JobProfileWithETag' }
+
+  /v1/job-profiles/{jobProfileId}:
+    parameters:
+      - $ref: '#/components/parameters/JobProfileId'
+      - $ref: '#/components/parameters/TenantId'
+    get:
+      operationId: getJobProfile
+      summary: A job profile with its required skills.
+      responses:
+        '200': { $ref: '#/components/responses/JobProfileWithETag' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: patchJobProfile
+      summary: Edit title, description or role.
+      parameters: [{ $ref: '#/components/parameters/IfMatch' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                title: { type: string }
+                description: { type: [string, 'null'] }
+                job_role_id: { type: [string, 'null'], format: uuid }
+      responses:
+        '200': { $ref: '#/components/responses/JobProfileWithETag' }
+        '412': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+        '428': { $ref: '#/components/responses/Problem' }
+
+  /v1/job-profiles/{jobProfileId}/skills:
+    put:
+      operationId: putJobProfileSkills
+      summary: 'Replace required skills: weight (0,1], target 0–5 in 0.5 steps, must_have.'
+      parameters:
+        - $ref: '#/components/parameters/JobProfileId'
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [skills]
+              properties:
+                skills:
+                  type: array
+                  maxItems: 200
+                  items:
+                    type: object
+                    required: [skill_id, weight, target_proficiency]
+                    properties:
+                      skill_id: { type: string, format: uuid }
+                      weight: { type: number, exclusiveMinimum: 0, maximum: 1 }
+                      target_proficiency: { type: number, minimum: 0, maximum: 5, multipleOf: 0.5 }
+                      must_have: { type: boolean, default: false }
+      responses:
+        '200': { $ref: '#/components/responses/JobProfileWithETag' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '412': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+
+  /v1/job-profiles/{jobProfileId}:publish:
+    $ref: '#/components/pathItems/publishJobProfile'
+  /v1/job-profiles/{jobProfileId}:archive:
+    $ref: '#/components/pathItems/archiveJobProfile'
+
+  /healthz:
+    get:
+      operationId: healthz
+      summary: Liveness probe.
+      security: []
+      responses:
+        '200': { description: Alive. }
+  /readyz:
+    get:
+      operationId: readyz
+      summary: Readiness probe (database reachable).
+      security: []
+      responses:
+        '200': { description: Ready. }
+        '503': { $ref: '#/components/responses/Problem' }
+
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+
+  parameters:
+    TenantId:
+      name: tenant_id
+      in: query
+      required: false
+      description: Platform principals only; tenant users act on their own tenant (another id gives 404).
+      schema: { type: string, format: uuid }
+    SkillId: { name: skillId, in: path, required: true, schema: { type: string, format: uuid } }
+    JobProfileId:
+      { name: jobProfileId, in: path, required: true, schema: { type: string, format: uuid } }
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      description: ETag from the last read. Missing → 428, stale → 412.
+      schema: { type: string }
+
+  headers:
+    ETag: { description: 'Version, e.g. "3"', schema: { type: string } }
+
+  responses:
+    Problem:
+      description: RFC 9457 problem document.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    SkillWithETag:
+      description: The skill.
+      headers: { ETag: { $ref: '#/components/headers/ETag' } }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Skill' }
+    JobProfileWithETag:
+      description: The job profile.
+      headers: { ETag: { $ref: '#/components/headers/ETag' } }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/JobProfile' }
+
+  pathItems:
+    deprecateSkill:
+      parameters:
+        - $ref: '#/components/parameters/SkillId'
+        - $ref: '#/components/parameters/TenantId'
+      post:
+        operationId: deprecateSkill
+        summary: 'Deprecate (row kept) with an optional same-type successor; emits taxonomy.skill.deprecated.v1.'
+        requestBody:
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  replaced_by: { type: [string, 'null'], format: uuid }
+        responses:
+          '200':
+            description: The deprecated skill with its successor.
+            content:
+              application/json:
+                schema: { $ref: '#/components/schemas/SkillDetail' }
+          '400': { $ref: '#/components/responses/Problem' }
+          '403': { $ref: '#/components/responses/Problem' }
+          '404': { $ref: '#/components/responses/Problem' }
+          '422': { $ref: '#/components/responses/Problem' }
+    commitImport:
+      parameters:
+        - { name: importId, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/TenantId'
+      post:
+        operationId: commitTaxonomyImport
+        summary: 'Apply a dry run atomically. Refused with errors (422) or if the taxonomy changed since (409 IMPORT_STALE).'
+        responses:
+          '200':
+            description: Committed.
+            content:
+              application/json:
+                schema: { $ref: '#/components/schemas/Import' }
+          '404': { $ref: '#/components/responses/Problem' }
+          '409': { $ref: '#/components/responses/Problem' }
+          '422': { $ref: '#/components/responses/Problem' }
+    publishJobProfile:
+      parameters:
+        - $ref: '#/components/parameters/JobProfileId'
+        - $ref: '#/components/parameters/TenantId'
+      post:
+        operationId: publishJobProfile
+        summary: 'Publish (needs ≥ 1 skill); emits taxonomy.job_profile.updated.v1.'
+        responses:
+          '200': { $ref: '#/components/responses/JobProfileWithETag' }
+          '422': { $ref: '#/components/responses/Problem' }
+    archiveJobProfile:
+      parameters:
+        - $ref: '#/components/parameters/JobProfileId'
+        - $ref: '#/components/parameters/TenantId'
+      post:
+        operationId: archiveJobProfile
+        summary: Archive (read-only afterwards).
+        responses:
+          '200': { $ref: '#/components/responses/JobProfileWithETag' }
+          '422': { $ref: '#/components/responses/Problem' }
+
+  schemas:
+    NodeType: { type: string, enum: [domain, subdomain, cluster, skill] }
+    Classification:
+      type: string
+      enum: [technical, functional, soft, tool, ai, emerging, unclassified]
+
+    CreateSkillRequest:
+      type: object
+      additionalProperties: false
+      required: [node_type, path, name]
+      properties:
+        node_type: { $ref: '#/components/schemas/NodeType' }
+        path:
+          type: string
+          description: ltree path; depth 1–4 by node type; the parent must exist.
+          pattern: '^[a-z0-9_]{1,64}(\.[a-z0-9_]{1,64}){0,3}$'
+        name: { type: string, maxLength: 200 }
+        description: { type: [string, 'null'], maxLength: 2000 }
+        classification: { $ref: '#/components/schemas/Classification' }
+        aliases: { type: array, maxItems: 50, items: { type: string } }
+        external_id: { type: [string, 'null'] }
+
+    PatchSkillRequest:
+      type: object
+      additionalProperties: false
+      minProperties: 1
+      properties:
+        name: { type: string, maxLength: 200 }
+        description: { type: [string, 'null'], maxLength: 2000 }
+        classification: { $ref: '#/components/schemas/Classification' }
+        aliases: { type: array, maxItems: 50, items: { type: string } }
+        external_id: { type: [string, 'null'] }
+
+    Skill:
+      type: object
+      required:
+        [
+          skill_id,
+          tenant_id,
+          scope,
+          node_type,
+          path,
+          name,
+          canonical_name,
+          classification,
+          aliases,
+          taxonomy_version,
+          version,
+        ]
+      properties:
+        skill_id: { type: string, format: uuid }
+        tenant_id: { type: [string, 'null'], format: uuid }
+        scope: { type: string, enum: [global, tenant] }
+        node_type: { $ref: '#/components/schemas/NodeType' }
+        path: { type: string }
+        name: { type: string, description: The tenant's display name if renamed. }
+        canonical_name: { type: string }
+        description: { type: [string, 'null'] }
+        classification: { $ref: '#/components/schemas/Classification' }
+        aliases: { type: array, items: { type: string } }
+        external_id: { type: [string, 'null'] }
+        taxonomy_version: { type: integer }
+        deprecated_at: { type: [string, 'null'], format: date-time }
+        replaced_by: { type: [string, 'null'], format: uuid }
+        override:
+          type: [object, 'null']
+          properties:
+            hidden: { type: boolean }
+            adopted: { type: boolean }
+            display_name: { type: [string, 'null'] }
+            aliases: { type: array, items: { type: string } }
+        version: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    SkillRef:
+      type: object
+      properties:
+        skill_id: { type: string, format: uuid }
+        path: { type: string }
+        name: { type: string }
+        node_type: { $ref: '#/components/schemas/NodeType' }
+
+    SkillDetail:
+      allOf:
+        - $ref: '#/components/schemas/Skill'
+        - type: object
+          properties:
+            ancestors: { type: array, items: { $ref: '#/components/schemas/SkillRef' } }
+            related:
+              type: array
+              items:
+                allOf:
+                  - $ref: '#/components/schemas/SkillRef'
+                  - type: object
+                    properties:
+                      edge_type: { type: string, enum: [RELATED_TO, PREREQUISITE_OF, REPLACES] }
+                      direction: { type: string, enum: [in, out, both] }
+                      weight: { type: number }
+            successor:
+              oneOf:
+                - $ref: '#/components/schemas/SkillRef'
+                - type: 'null'
+
+    Import:
+      type: object
+      properties:
+        import_id: { type: string, format: uuid }
+        tenant_id: { type: [string, 'null'] }
+        status: { type: string, enum: [dry_run, committed, failed] }
+        file_name: { type: string }
+        row_count: { type: integer }
+        summary:
+          type: object
+          properties:
+            create: { type: integer }
+            update: { type: integer }
+            unchanged: { type: integer }
+            error: { type: integer }
+        entries:
+          type: array
+          description: 'Per row: action create|update|unchanged|error, with changed fields or errors.'
+          items: { type: object }
+        expires_at: { type: string, format: date-time }
+        committed_at: { type: [string, 'null'], format: date-time }
+
+    JobProfile:
+      type: object
+      properties:
+        job_profile_id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        job_role_id: { type: [string, 'null'], format: uuid }
+        title: { type: string }
+        description: { type: [string, 'null'] }
+        status: { type: string, enum: [draft, published, archived] }
+        skills:
+          type: array
+          items:
+            type: object
+            properties:
+              skill_id: { type: string, format: uuid }
+              weight: { type: number }
+              target_proficiency: { type: number }
+              must_have: { type: boolean }
+        version: { type: integer }
+        published_at: { type: [string, 'null'], format: date-time }
+
+    Problem:
+      type: object
+      required: [type, title, status, detail, instance, code]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        code:
+          type: string
+          examples:
+            [
+              SKILL_NOT_FOUND,
+              SKILL_PATH_TAKEN,
+              PATH_DEPTH_MISMATCH,
+              PARENT_NOT_FOUND,
+              GLOBAL_SKILL_READ_ONLY,
+              PREREQUISITE_CYCLE,
+              EDGE_EXISTS,
+              INVALID_SUCCESSOR,
+              SKILL_DEPRECATED,
+              IMPORT_HAS_ERRORS,
+              IMPORT_STALE,
+              NOTHING_TO_PUBLISH,
+              SKILLS_REQUIRED,
+              INVALID_WEIGHT,
+              INVALID_TARGET_PROFICIENCY,
+              EMBEDDINGS_UNAVAILABLE,
+              VERSION_MISMATCH,
+              IF_MATCH_REQUIRED,
+            ]
+        request_id: { type: string }

@@ -1,0 +1,126 @@
+{
+  "comment": "Attack corpus and golden programs (docs/prompts/09 §8). Each case runs through the real judge in its language's image. Escape probes print BLOCKED (or ALIVE); anything else is a wrong answer, i.e. a failed defence.",
+  "cases": [
+    {
+      "name": "fork bomb (Python)",
+      "lang": "python",
+      "file": "fork_bomb.py",
+      "verdict": "runtime_error",
+      "detail": "RESOURCE_PROCESSES"
+    },
+    {
+      "name": "fork bomb (C)",
+      "lang": "c",
+      "file": "fork_bomb.c",
+      "verdict": "runtime_error",
+      "detail": "RESOURCE_PROCESSES"
+    },
+    {
+      "name": "infinite loop (Python)",
+      "lang": "python",
+      "file": "infinite_loop.py",
+      "verdict": "time_limit_exceeded",
+      "detail": "CPU_TIME"
+    },
+    {
+      "name": "infinite loop (C++)",
+      "lang": "cpp",
+      "file": "infinite_loop.cpp",
+      "verdict": "time_limit_exceeded",
+      "detail": "CPU_TIME"
+    },
+    {
+      "name": "sleep(999)",
+      "lang": "python",
+      "file": "sleep_999.py",
+      "verdict": "time_limit_exceeded",
+      "detail": "WALL_TIME",
+      "max_seconds": 20
+    },
+    {
+      "name": "2 GB allocation (Python)",
+      "lang": "python",
+      "file": "alloc_2gb.py",
+      "verdict": "memory_limit_exceeded"
+    },
+    {
+      "name": "2 GB allocation (C++)",
+      "lang": "cpp",
+      "file": "alloc_2gb.cpp",
+      "verdict": "memory_limit_exceeded"
+    },
+    {
+      "name": "network connect and DNS",
+      "lang": "python",
+      "file": "network.py",
+      "expected": "BLOCKED",
+      "verdict": "accepted"
+    },
+    {
+      "name": "/proc/1/environ",
+      "lang": "python",
+      "file": "proc_environ.py",
+      "expected": "BLOCKED",
+      "verdict": "accepted"
+    },
+    {
+      "name": "host filesystem",
+      "lang": "python",
+      "file": "host_fs.py",
+      "expected": "BLOCKED",
+      "verdict": "accepted"
+    },
+    {
+      "name": "kill every process",
+      "lang": "python",
+      "file": "kill_all.py",
+      "expected": "ALIVE",
+      "verdict": "accepted"
+    },
+    {
+      "name": "50 MB of stdout",
+      "lang": "python",
+      "file": "huge_output.py",
+      "verdict": "output_limit_exceeded"
+    },
+    {
+      "name": "C++ template bomb",
+      "lang": "cpp",
+      "file": "template_bomb.cpp",
+      "verdict": "compilation_error",
+      "max_seconds": 25
+    },
+    { "name": "golden Python", "lang": "python", "file": "sum.py", "verdict": "accepted" },
+    {
+      "name": "golden Python (wrong)",
+      "lang": "python",
+      "file": "sum_wrong.py",
+      "verdict": "wrong_answer"
+    },
+    { "name": "golden Java", "lang": "java", "file": "Sum.java", "verdict": "accepted" },
+    {
+      "name": "golden Java (wrong)",
+      "lang": "java",
+      "file": "SumWrong.java",
+      "verdict": "wrong_answer"
+    },
+    { "name": "golden C++", "lang": "cpp", "file": "sum.cpp", "verdict": "accepted" },
+    {
+      "name": "golden C++ (wrong)",
+      "lang": "cpp",
+      "file": "sum_wrong.cpp",
+      "verdict": "wrong_answer"
+    },
+    { "name": "golden C", "lang": "c", "file": "sum.c", "verdict": "accepted" },
+    { "name": "golden C (wrong)", "lang": "c", "file": "sum_wrong.c", "verdict": "wrong_answer" },
+    { "name": "golden Node.js", "lang": "node", "file": "sum.js", "verdict": "accepted" },
+    {
+      "name": "golden Node.js (wrong)",
+      "lang": "node",
+      "file": "sum_wrong.js",
+      "verdict": "wrong_answer"
+    },
+    { "name": "golden Go", "lang": "go", "file": "sum.go", "verdict": "accepted" },
+    { "name": "golden Go (wrong)", "lang": "go", "file": "sum_wrong.go", "verdict": "wrong_answer" }
+  ]
+}

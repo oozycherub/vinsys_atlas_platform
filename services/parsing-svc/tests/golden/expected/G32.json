@@ -1,0 +1,96 @@
+{
+  "id": "G32",
+  "format": "docx",
+  "contact": {
+    "full_name": "Hugo Eskildsen",
+    "email": "hugo.eskildsen32@mailbox.example",
+    "phone": "+31 6 7336 9954"
+  },
+  "location": "Aarhus, Denmark",
+  "summary": "Software Engineer with experience in Kubernetes, React, AWS.",
+  "work_history": [
+    {
+      "title": "Software Engineer",
+      "employer": "Meadowbrook Energy",
+      "start": "2024-06",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Built deployment tooling with Kubernetes and React",
+        "Built reporting services using AWS"
+      ],
+      "skills": [
+        "Kubernetes",
+        "React",
+        "AWS"
+      ]
+    },
+    {
+      "title": "Platform Engineer",
+      "employer": "Bluefjord Analytics",
+      "start": "2021-07",
+      "end": "2024-07",
+      "is_current": false,
+      "responsibilities": [
+        "Automated event pipelines with Airflow and Scala",
+        "Scaled event pipelines using TypeScript"
+      ],
+      "skills": [
+        "Airflow",
+        "Scala",
+        "TypeScript"
+      ]
+    },
+    {
+      "title": "Machine Learning Engineer",
+      "employer": "Granite Peak Retail",
+      "start": "2017-12",
+      "end": "2021-05",
+      "is_current": false,
+      "responsibilities": [
+        "Built customer APIs with Go and Linux",
+        "Built reporting services using Kafka"
+      ],
+      "skills": [
+        "Go",
+        "Linux",
+        "Kafka"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Riverbend Polytechnic",
+      "degree": "BSc",
+      "field": "Computer Science",
+      "end_year": 2017
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "AWS Certified Solutions Architect",
+      "issuer": "Amazon Web Services",
+      "issued": "2024-01"
+    }
+  ],
+  "skills": [
+    "Kubernetes",
+    "React",
+    "AWS",
+    "Airflow",
+    "Scala",
+    "TypeScript",
+    "Go",
+    "Linux",
+    "Kafka",
+    "PostgreSQL",
+    "Snowflake",
+    "Spark"
+  ],
+  "skills_line_extra": [
+    "PostgreSQL",
+    "Snowflake",
+    "Spark"
+  ],
+  "file": "G32.docx"
+}

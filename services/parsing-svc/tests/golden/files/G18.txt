@@ -1,0 +1,20 @@
+Selin Grimaldo
+selin.grimaldo18@mailbox.example | +31 6 7454 7465 | Aarhus, Denmark
+Ref: G18
+Summary
+Backend Engineer with experience in Pandas, PostgreSQL, Docker.
+Experience
+Backend Engineer - Granite Peak Retail
+Apr 2022 - Present
+* Automated batch jobs with Pandas and PostgreSQL
+* Scaled customer APIs using Docker
+Backend Engineer - Cobalt Harbor Insurance
+Feb 2020 - Dec 2022
+* Automated customer APIs with React and Scala
+* Built data models using dbt
+Education
+BEng in Software Engineering, Northgate College of Engineering, 2019
+Skills
+Pandas, PostgreSQL, Docker, React
+Scala, dbt, GraphQL, Airflow
+Redis

@@ -1,0 +1,71 @@
+# Images are referenced by digest only (the release pipeline fills these in; see
+# infra/sandbox-images/build.sh). A worker refuses languages whose registry digest differs.
+registry: registry.atlas.internal/atlas
+api:
+  image: sandbox-api@sha256:0000000000000000000000000000000000000000000000000000000000000000
+  replicas: 3
+  port: 8089
+  resources: { requests: { cpu: 250m, memory: 256Mi }, limits: { memory: 512Mi } }
+
+# Languages served by a judge Deployment each. boxes = warm isolate boxes per pod.
+languages:
+  - {
+      slug: python,
+      id: 71,
+      digest: 'sha256:0000000000000000000000000000000000000000000000000000000000000000',
+      boxes: 8,
+    }
+  - {
+      slug: java,
+      id: 62,
+      digest: 'sha256:0000000000000000000000000000000000000000000000000000000000000000',
+      boxes: 4,
+      extraDirs: '/etc:noexec,/opt',
+    }
+  - {
+      slug: cpp,
+      id: 54,
+      digest: 'sha256:0000000000000000000000000000000000000000000000000000000000000000',
+      boxes: 8,
+    }
+  - {
+      slug: c,
+      id: 50,
+      digest: 'sha256:0000000000000000000000000000000000000000000000000000000000000000',
+      boxes: 8,
+    }
+  - {
+      slug: node,
+      id: 63,
+      digest: 'sha256:0000000000000000000000000000000000000000000000000000000000000000',
+      boxes: 8,
+    }
+  - {
+      slug: go,
+      id: 60,
+      digest: 'sha256:0000000000000000000000000000000000000000000000000000000000000000',
+      boxes: 4,
+    }
+
+worker:
+  # Per pod: boxes × (memory cap 1 GiB × multiplier) bounds the worst case; requests size the common case.
+  resources: { requests: { cpu: '4', memory: 4Gi }, limits: { memory: 12Gi } }
+  # tmpfs for box roots (PRD: /box is a 64 MB tmpfs per box, 256 MB cap).
+  boxRootSize: 2Gi
+  keda:
+    pendingPerWorker: 20 # PRD §2.2b: target 20 pending jobs per worker
+    maxReplicas: 50
+    pollingInterval: 5
+    cooldownPeriod: 300
+
+# Where workers may connect. Nothing else: the boxes themselves have no network at all.
+egress:
+  database: { cidr: 10.20.0.0/24, port: 6432 } # PgBouncer
+  objectStorage: { cidr: 10.20.8.0/24, port: 443 } # S3 VPC endpoint
+  kafka: { cidr: 10.20.4.0/24, port: 9092 } # sandbox-api only (event consumer)
+  callers: { namespace: atlas-assessment } # only assessment-svc calls the API
+
+secrets:
+  database: sandbox-db # keys: url (atlas_app), keda-url (atlas_metrics)
+  objectStorage: sandbox-s3 # keys: endpoint, access-key, secret-key
+  auth: atlas-auth # keys: issuer, audience, jwks-url

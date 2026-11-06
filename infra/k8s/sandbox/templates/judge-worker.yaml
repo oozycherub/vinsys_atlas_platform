@@ -1,0 +1,62 @@
+{{- range .Values.languages }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: judge-{{ .slug }}
+  namespace: atlas-sandbox
+  labels: { app.kubernetes.io/name: judge-worker, atlas.dev/language: '{{ .slug }}' }
+spec:
+  replicas: 0 # KEDA owns the replica count
+  selector:
+    matchLabels: { app.kubernetes.io/name: judge-worker, atlas.dev/language: '{{ .slug }}' }
+  strategy: { type: RollingUpdate, rollingUpdate: { maxUnavailable: 0, maxSurge: 1 } }
+  template:
+    metadata:
+      labels: { app.kubernetes.io/name: judge-worker, atlas.dev/language: '{{ .slug }}' }
+    spec:
+      runtimeClassName: gvisor # layer 1; isolate boxes inside are layer 2
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      # Leases (60 s) re-queue unfinished jobs; give running jobs time to finish.
+      terminationGracePeriodSeconds: 90
+      containers:
+        - name: worker
+          image: '{{ $.Values.registry }}/judge-{{ .slug }}@{{ .digest }}'
+          securityContext:
+            privileged: true # isolate creates namespaces and cgroups — inside gVisor only
+          env:
+            - { name: NODE_ENV, value: production }
+            - { name: ATLAS_JUDGE_LANGUAGES, value: '{{ .slug }}' }
+            - { name: ATLAS_JUDGE_IMAGE_DIGEST, value: '{{ .digest }}' }
+            - { name: ATLAS_JUDGE_BOX_POOL, value: '{{ .boxes }}' }
+            - { name: ATLAS_JUDGE_EXTRA_DIRS, value: '{{ default "/etc:noexec" .extraDirs }}' }
+            - name: ATLAS_JUDGE_WORKER_ID
+              valueFrom: { fieldRef: { fieldPath: metadata.name } }
+            - name: ATLAS_DATABASE_URL
+              valueFrom: { secretKeyRef: { name: '{{ $.Values.secrets.database }}', key: url } }
+            - name: ATLAS_S3_ENDPOINT
+              valueFrom: { secretKeyRef: { name: '{{ $.Values.secrets.objectStorage }}', key: endpoint } }
+            - name: ATLAS_S3_ACCESS_KEY
+              valueFrom: { secretKeyRef: { name: '{{ $.Values.secrets.objectStorage }}', key: access-key } }
+            - name: ATLAS_S3_SECRET_KEY
+              valueFrom: { secretKeyRef: { name: '{{ $.Values.secrets.objectStorage }}', key: secret-key } }
+            - name: ATLAS_AUTH_ISSUER
+              valueFrom: { secretKeyRef: { name: '{{ $.Values.secrets.auth }}', key: issuer } }
+            - name: ATLAS_AUTH_AUDIENCE
+              valueFrom: { secretKeyRef: { name: '{{ $.Values.secrets.auth }}', key: audience } }
+            - name: ATLAS_AUTH_JWKS_URL
+              valueFrom: { secretKeyRef: { name: '{{ $.Values.secrets.auth }}', key: jwks-url } }
+          ports: [{ name: health, containerPort: 8090 }]
+          livenessProbe: { httpGet: { path: /healthz, port: health }, periodSeconds: 10 }
+          readinessProbe: { httpGet: { path: /readyz, port: health }, periodSeconds: 5 }
+          resources: {{ toJson $.Values.worker.resources }}
+          volumeMounts:
+            - { name: boxes, mountPath: /var/local/lib/isolate }
+            - { name: bundle-cache, mountPath: /var/cache/atlas-judge }
+      volumes:
+        - name: boxes
+          emptyDir: { medium: Memory, sizeLimit: '{{ $.Values.worker.boxRootSize }}' }
+        - name: bundle-cache
+          emptyDir: { sizeLimit: 2Gi }
+{{- end }}

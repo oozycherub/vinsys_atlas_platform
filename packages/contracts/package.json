@@ -1,0 +1,14 @@
+{
+  "name": "@atlas/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Versioned event schemas and shared DTO types for Atlas services",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "zod": "3.25.76"
+  }
+}

@@ -1,0 +1,90 @@
+{
+  "id": "G15",
+  "format": "pdf",
+  "contact": {
+    "full_name": "Pavel Falkenrath",
+    "email": "pavel.falkenrath15@mailbox.example",
+    "phone": "+31 6 2700 5930"
+  },
+  "location": "Porto, Portugal",
+  "summary": "Analytics Engineer with experience in Elasticsearch, Java, Terraform.",
+  "work_history": [
+    {
+      "title": "Analytics Engineer",
+      "employer": "Tidewater Logistics",
+      "start": "2022-12",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Automated batch jobs with Elasticsearch and Java",
+        "Maintained customer APIs using Terraform"
+      ],
+      "skills": [
+        "Elasticsearch",
+        "Java",
+        "Terraform"
+      ]
+    },
+    {
+      "title": "Site Reliability Engineer",
+      "employer": "Meadowbrook Energy",
+      "start": "2018-10",
+      "end": "2022-01",
+      "is_current": false,
+      "responsibilities": [
+        "Migrated data models with Scala and Spark",
+        "Maintained batch jobs using Snowflake"
+      ],
+      "skills": [
+        "Scala",
+        "Spark",
+        "Snowflake"
+      ]
+    },
+    {
+      "title": "Software Engineer",
+      "employer": "Bluefjord Analytics",
+      "start": "2014-12",
+      "end": "2018-04",
+      "is_current": false,
+      "responsibilities": [
+        "Automated customer APIs with AWS and Go",
+        "Automated event pipelines using SQL"
+      ],
+      "skills": [
+        "AWS",
+        "Go",
+        "SQL"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Lakeside Institute of Technology",
+      "degree": "MSc",
+      "field": "Applied Mathematics",
+      "end_year": 2013
+    }
+  ],
+  "certifications": [],
+  "skills": [
+    "Elasticsearch",
+    "Java",
+    "Terraform",
+    "Scala",
+    "Spark",
+    "Snowflake",
+    "AWS",
+    "Go",
+    "SQL",
+    "Kafka",
+    "Kubernetes",
+    "PostgreSQL"
+  ],
+  "skills_line_extra": [
+    "Kafka",
+    "Kubernetes",
+    "PostgreSQL"
+  ],
+  "file": "G15.pdf"
+}

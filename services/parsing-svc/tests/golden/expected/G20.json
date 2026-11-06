@@ -1,0 +1,96 @@
+{
+  "id": "G20",
+  "format": "pdf",
+  "contact": {
+    "full_name": "Ulla Achterberg",
+    "email": "ulla.achterberg20@mailbox.example",
+    "phone": "+31 6 2846 1403"
+  },
+  "location": "Tampere, Finland",
+  "summary": "Platform Engineer with experience in dbt, AWS, PyTorch.",
+  "work_history": [
+    {
+      "title": "Platform Engineer",
+      "employer": "Meadowbrook Energy",
+      "start": "2023-10",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Maintained customer APIs with dbt and AWS",
+        "Automated data models using PyTorch"
+      ],
+      "skills": [
+        "dbt",
+        "AWS",
+        "PyTorch"
+      ]
+    },
+    {
+      "title": "Data Engineer",
+      "employer": "Bluefjord Analytics",
+      "start": "2020-05",
+      "end": "2023-07",
+      "is_current": false,
+      "responsibilities": [
+        "Automated batch jobs with SQL and Redis",
+        "Migrated reporting services using Airflow"
+      ],
+      "skills": [
+        "SQL",
+        "Redis",
+        "Airflow"
+      ]
+    },
+    {
+      "title": "Analytics Engineer",
+      "employer": "Granite Peak Retail",
+      "start": "2017-10",
+      "end": "2020-11",
+      "is_current": false,
+      "responsibilities": [
+        "Migrated data models with Kubernetes and Spark",
+        "Built batch jobs using Docker"
+      ],
+      "skills": [
+        "Kubernetes",
+        "Spark",
+        "Docker"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Lakeside Institute of Technology",
+      "degree": "BSc",
+      "field": "Computer Science",
+      "end_year": 2016
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "AWS Certified Solutions Architect",
+      "issuer": "Amazon Web Services",
+      "issued": "2024-04"
+    }
+  ],
+  "skills": [
+    "dbt",
+    "AWS",
+    "PyTorch",
+    "SQL",
+    "Redis",
+    "Airflow",
+    "Kubernetes",
+    "Spark",
+    "Docker",
+    "React",
+    "Python",
+    "TypeScript"
+  ],
+  "skills_line_extra": [
+    "React",
+    "Python",
+    "TypeScript"
+  ],
+  "file": "G20.pdf"
+}

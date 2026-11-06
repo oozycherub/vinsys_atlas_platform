@@ -1,0 +1,26 @@
+Ines Quintanilla
+ines.quintanilla8@mailbox.example | +31 6 9516 8292 | Porto, Portugal
+Ref: G08
+Summary
+Backend Engineer with experience in Spark, SQL, Elasticsearch.
+Experience
+Backend Engineer - Meadowbrook Energy
+Dec 2024 - Present
+* Scaled data models with Spark and SQL
+* Built data models using Elasticsearch
+Software Engineer - Bluefjord Analytics
+Nov 2021 - Jan 2024
+* Migrated reporting services with PyTorch and Java
+* Automated event pipelines using PostgreSQL
+Machine Learning Engineer - Granite Peak Retail
+Mar 2019 - Dec 2021
+* Built event pipelines with dbt and AWS
+* Designed reporting services using Redis
+Education
+BSc in Computer Science, Northgate College of Engineering, 2019
+Certifications
+AWS Certified Solutions Architect - Amazon Web Services, Aug 2024
+Skills
+Spark, SQL, Elasticsearch, PyTorch
+Java, PostgreSQL, dbt, AWS
+Redis, Terraform, Kubernetes, Grafana

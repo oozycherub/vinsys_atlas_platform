@@ -1,0 +1,18 @@
+{
+  "payload": {
+    "assessment_id": "{{assessment_id}}",
+    "band": "red",
+    "breakdown": {
+      "fullscreen_exit": 3,
+      "multiple_faces": 24,
+      "tamper_suspected": 25
+    },
+    "occurred_at": "{{occurred_at}}",
+    "review_required": true,
+    "revision": 1,
+    "session_id": "{{session_id}}",
+    "tenant_id": "{{tenant_id}}",
+    "trust_score": 48
+  },
+  "topic": "proctoring.session.finalized.v1"
+}

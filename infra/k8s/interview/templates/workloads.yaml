@@ -1,0 +1,94 @@
+{{- define "interview.env" -}}
+- { name: ATLAS_ENV, value: production }
+- { name: ATLAS_INTERVIEW_KAFKA_BROKERS, value: 'kafka.atlas-data:9092' }
+- { name: ATLAS_INTERVIEW_GATEWAY_URL, value: '{{ .Values.urls.gateway }}' }
+- { name: ATLAS_INTERVIEW_TAXONOMY_URL, value: '{{ .Values.urls.taxonomy }}' }
+- { name: ATLAS_INTERVIEW_TENANT_URL, value: '{{ .Values.urls.tenant }}' }
+- { name: ATLAS_INTERVIEW_LIVEKIT_URL, value: '{{ .Values.urls.livekit }}' }
+- { name: ATLAS_INTERVIEW_WS_BASE_URL, value: '{{ .Values.urls.ws }}' }
+- name: ATLAS_INTERVIEW_DATABASE_URL
+  valueFrom: { secretKeyRef: { name: '{{ .Values.secrets.database }}', key: url } }
+- name: ATLAS_INTERVIEW_REDIS_URL
+  valueFrom: { secretKeyRef: { name: '{{ .Values.secrets.redis }}', key: url } }
+- name: ATLAS_INTERVIEW_S3_BUCKET
+  valueFrom: { secretKeyRef: { name: '{{ .Values.secrets.objectStorage }}', key: bucket } }
+- name: ATLAS_INTERVIEW_JWT_ISSUER
+  valueFrom: { secretKeyRef: { name: '{{ .Values.secrets.auth }}', key: issuer } }
+- name: ATLAS_INTERVIEW_JWKS_URL
+  valueFrom: { secretKeyRef: { name: '{{ .Values.secrets.auth }}', key: jwks-url } }
+- name: ATLAS_INTERVIEW_TOKEN_URL
+  valueFrom: { secretKeyRef: { name: '{{ .Values.secrets.auth }}', key: token-url } }
+- name: ATLAS_INTERVIEW_CLIENT_ID
+  valueFrom: { secretKeyRef: { name: '{{ .Values.secrets.client }}', key: id } }
+- name: ATLAS_INTERVIEW_CLIENT_SECRET
+  valueFrom: { secretKeyRef: { name: '{{ .Values.secrets.client }}', key: secret } }
+- name: ATLAS_INTERVIEW_LIVEKIT_API_KEY
+  valueFrom: { secretKeyRef: { name: '{{ .Values.secrets.livekit }}', key: api-key } }
+- name: ATLAS_INTERVIEW_LIVEKIT_API_SECRET
+  valueFrom: { secretKeyRef: { name: '{{ .Values.secrets.livekit }}', key: api-secret } }
+- name: ATLAS_INTERVIEW_WORKER_ID
+  valueFrom: { fieldRef: { fieldPath: metadata.name } }
+{{- end }}
+# The API: REST, the text-mode WebSocket, the event consumer and maintenance.
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: interview-api, namespace: atlas-interview, labels: { app.kubernetes.io/name: interview-api } }
+spec:
+  replicas: {{ .Values.api.replicas }}
+  selector: { matchLabels: { app.kubernetes.io/name: interview-api } }
+  template:
+    metadata: { labels: { app.kubernetes.io/name: interview-api } }
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      securityContext: { runAsNonRoot: true, runAsUser: 10001, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: api
+          image: '{{ .Values.registry }}/{{ .Values.api.image }}'
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
+          env:
+            {{- include "interview.env" . | nindent 12 }}
+            - { name: PORT, value: '{{ .Values.api.port }}' }
+          ports: [{ name: http, containerPort: {{ .Values.api.port }} }]
+          livenessProbe: { httpGet: { path: /healthz, port: http } }
+          readinessProbe: { httpGet: { path: /readyz, port: http } }
+          resources: {{ toJson .Values.api.resources }}
+      # WebSocket clients reconnect to any replica: the session lease moves with them.
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata: { name: interview-svc, namespace: atlas-interview }
+spec:
+  selector: { app.kubernetes.io/name: interview-api }
+  ports: [{ name: http, port: 443, targetPort: http }]
+---
+# Voice agents: claim sessions that need one, join the LiveKit room, run the pipeline.
+apiVersion: apps/v1
+kind: Deployment
+metadata: { name: interview-agent, namespace: atlas-interview, labels: { app.kubernetes.io/name: interview-agent } }
+spec:
+  selector: { matchLabels: { app.kubernetes.io/name: interview-agent } }
+  template:
+    metadata: { labels: { app.kubernetes.io/name: interview-agent } }
+    spec:
+      automountServiceAccountToken: false
+      enableServiceLinks: false
+      nodeSelector: { atlas.dev/pool: gpu }
+      tolerations: [{ key: nvidia.com/gpu, operator: Exists, effect: NoSchedule }]
+      securityContext: { runAsNonRoot: true, runAsUser: 10001, seccompProfile: { type: RuntimeDefault } }
+      containers:
+        - name: agent
+          image: '{{ .Values.registry }}/{{ .Values.agent.image }}'
+          args: [worker]
+          securityContext: { allowPrivilegeEscalation: false, readOnlyRootFilesystem: true, capabilities: { drop: [ALL] } }
+          env:
+            {{- include "interview.env" . | nindent 12 }}
+            - { name: ATLAS_INTERVIEW_WORKER_CAPACITY, value: '{{ .Values.agent.capacity }}' }
+            - { name: ATLAS_INTERVIEW_TTS_URL, value: '{{ .Values.urls.tts }}' }
+          resources: {{ toJson .Values.agent.resources }}
+          volumeMounts: [{ name: models, mountPath: /models, readOnly: true }]
+      volumes: [{ name: models, persistentVolumeClaim: { claimName: whisper-models, readOnly: true } }]
+      # Live interviews drain: a terminating agent stops claiming and finishes its sessions;
+      # anything still running resumes on another agent from its checkpoint.
+      terminationGracePeriodSeconds: 1800

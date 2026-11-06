@@ -1,0 +1,8 @@
+# YOLO11s fine-tuned on proctoring classes (phone, book, earbuds, second_person, laptop), ONNX.
+name: "yolo11s_proctor"
+platform: "onnxruntime_onnx"
+max_batch_size: 32
+input [ { name: "images", data_type: TYPE_FP32, dims: [ 3, 640, 640 ] } ]
+output [ { name: "output0", data_type: TYPE_FP32, dims: [ 9, 8400 ] } ]
+dynamic_batching { max_queue_delay_microseconds: 10000 }
+instance_group [ { kind: KIND_GPU, count: 1 } ]

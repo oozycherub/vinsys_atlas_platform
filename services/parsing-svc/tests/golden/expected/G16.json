@@ -1,0 +1,96 @@
+{
+  "id": "G16",
+  "format": "pdf2col",
+  "contact": {
+    "full_name": "Quilla Mastrangelo",
+    "email": "quilla.mastrangelo16@mailbox.example",
+    "phone": "+31 6 6977 7397"
+  },
+  "location": "Gdansk, Poland",
+  "summary": "Senior Data Engineer with experience in dbt, Scala, Elasticsearch.",
+  "work_history": [
+    {
+      "title": "Senior Data Engineer",
+      "employer": "Copperleaf Health",
+      "start": "2022-09",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Maintained customer APIs with dbt and Scala",
+        "Built customer APIs using Elasticsearch"
+      ],
+      "skills": [
+        "dbt",
+        "Scala",
+        "Elasticsearch"
+      ]
+    },
+    {
+      "title": "Site Reliability Engineer",
+      "employer": "Ironbark Robotics",
+      "start": "2018-08",
+      "end": "2022-10",
+      "is_current": false,
+      "responsibilities": [
+        "Designed event pipelines with GraphQL and TypeScript",
+        "Automated deployment tooling using Kubernetes"
+      ],
+      "skills": [
+        "GraphQL",
+        "TypeScript",
+        "Kubernetes"
+      ]
+    },
+    {
+      "title": "Platform Engineer",
+      "employer": "Quarry Lane Software",
+      "start": "2015-06",
+      "end": "2018-06",
+      "is_current": false,
+      "responsibilities": [
+        "Designed data models with React and Java",
+        "Maintained deployment tooling using Linux"
+      ],
+      "skills": [
+        "React",
+        "Java",
+        "Linux"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Westmarch University",
+      "degree": "BSc",
+      "field": "Computer Science",
+      "end_year": 2014
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "AWS Certified Solutions Architect",
+      "issuer": "Amazon Web Services",
+      "issued": "2024-03"
+    }
+  ],
+  "skills": [
+    "dbt",
+    "Scala",
+    "Elasticsearch",
+    "GraphQL",
+    "TypeScript",
+    "Kubernetes",
+    "React",
+    "Java",
+    "Linux",
+    "Redis",
+    "Python",
+    "Snowflake"
+  ],
+  "skills_line_extra": [
+    "Redis",
+    "Python",
+    "Snowflake"
+  ],
+  "file": "G16.pdf"
+}

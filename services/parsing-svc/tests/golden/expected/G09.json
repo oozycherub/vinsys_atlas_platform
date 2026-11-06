@@ -1,0 +1,90 @@
+{
+  "id": "G09",
+  "format": "pdf",
+  "contact": {
+    "full_name": "Jonas Dovrat",
+    "email": "jonas.dovrat9@mailbox.example",
+    "phone": "+31 6 3952 1195"
+  },
+  "location": "Gdansk, Poland",
+  "summary": "Software Engineer with experience in Redis, Snowflake, dbt.",
+  "work_history": [
+    {
+      "title": "Software Engineer",
+      "employer": "Ironbark Robotics",
+      "start": "2024-12",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Designed deployment tooling with Redis and Snowflake",
+        "Built event pipelines using dbt"
+      ],
+      "skills": [
+        "Redis",
+        "Snowflake",
+        "dbt"
+      ]
+    },
+    {
+      "title": "Senior Data Engineer",
+      "employer": "Quarry Lane Software",
+      "start": "2022-04",
+      "end": "2024-10",
+      "is_current": false,
+      "responsibilities": [
+        "Automated deployment tooling with Kafka and Pandas",
+        "Migrated event pipelines using Kubernetes"
+      ],
+      "skills": [
+        "Kafka",
+        "Pandas",
+        "Kubernetes"
+      ]
+    },
+    {
+      "title": "Site Reliability Engineer",
+      "employer": "Silverline Payments",
+      "start": "2018-03",
+      "end": "2022-10",
+      "is_current": false,
+      "responsibilities": [
+        "Designed customer APIs with React and Docker",
+        "Built reporting services using Grafana"
+      ],
+      "skills": [
+        "React",
+        "Docker",
+        "Grafana"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Ashford Technical University",
+      "degree": "MSc",
+      "field": "Data Science",
+      "end_year": 2017
+    }
+  ],
+  "certifications": [],
+  "skills": [
+    "Redis",
+    "Snowflake",
+    "dbt",
+    "Kafka",
+    "Pandas",
+    "Kubernetes",
+    "React",
+    "Docker",
+    "Grafana",
+    "Go",
+    "Linux",
+    "Terraform"
+  ],
+  "skills_line_extra": [
+    "Go",
+    "Linux",
+    "Terraform"
+  ],
+  "file": "G09.pdf"
+}

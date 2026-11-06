@@ -1,0 +1,96 @@
+{
+  "id": "G35",
+  "format": "pdf",
+  "contact": {
+    "full_name": "Kaia Falkenrath",
+    "email": "kaia.falkenrath35@mailbox.example",
+    "phone": "+31 6 8250 3292"
+  },
+  "location": "Rotterdam, Netherlands",
+  "summary": "Software Engineer with experience in SQL, Java, Python.",
+  "work_history": [
+    {
+      "title": "Software Engineer",
+      "employer": "Cobalt Harbor Insurance",
+      "start": "2024-02",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Maintained reporting services with SQL and Java",
+        "Built deployment tooling using Python"
+      ],
+      "skills": [
+        "SQL",
+        "Java",
+        "Python"
+      ]
+    },
+    {
+      "title": "Analytics Engineer",
+      "employer": "Copperleaf Health",
+      "start": "2021-05",
+      "end": "2024-10",
+      "is_current": false,
+      "responsibilities": [
+        "Migrated customer APIs with TypeScript and AWS",
+        "Built reporting services using Docker"
+      ],
+      "skills": [
+        "TypeScript",
+        "AWS",
+        "Docker"
+      ]
+    },
+    {
+      "title": "Data Engineer",
+      "employer": "Ironbark Robotics",
+      "start": "2017-12",
+      "end": "2021-10",
+      "is_current": false,
+      "responsibilities": [
+        "Designed event pipelines with Snowflake and Kafka",
+        "Automated batch jobs using PostgreSQL"
+      ],
+      "skills": [
+        "Snowflake",
+        "Kafka",
+        "PostgreSQL"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Lakeside Institute of Technology",
+      "degree": "MSc",
+      "field": "Applied Mathematics",
+      "end_year": 2016
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Terraform Associate",
+      "issuer": "HashiCorp",
+      "issued": "2024-04"
+    }
+  ],
+  "skills": [
+    "SQL",
+    "Java",
+    "Python",
+    "TypeScript",
+    "AWS",
+    "Docker",
+    "Snowflake",
+    "Kafka",
+    "PostgreSQL",
+    "Scala",
+    "Linux",
+    "Go"
+  ],
+  "skills_line_extra": [
+    "Scala",
+    "Linux",
+    "Go"
+  ],
+  "file": "G35.pdf"
+}

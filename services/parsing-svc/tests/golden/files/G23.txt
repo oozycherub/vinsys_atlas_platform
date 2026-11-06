@@ -1,0 +1,26 @@
+Xenia Brannigan
+xenia.brannigan23@mailbox.example | +31 6 9004 8402 | Gdansk, Poland
+Ref: G23
+Summary
+Analytics Engineer with experience in AWS, Python, Scala.
+Experience
+Analytics Engineer - Cobalt Harbor Insurance
+Jul 2024 - Present
+* Maintained deployment tooling with AWS and Python
+* Maintained customer APIs using Scala
+Senior Data Engineer - Copperleaf Health
+May 2021 - Feb 2024
+* Scaled data models with PyTorch and PostgreSQL
+* Designed reporting services using Redis
+Machine Learning Engineer - Ironbark Robotics
+Nov 2017 - Apr 2021
+* Migrated customer APIs with Airflow and TypeScript
+* Scaled deployment tooling using Go
+Education
+MSc in Applied Mathematics, Northgate College of Engineering, 2017
+Certifications
+Terraform Associate - HashiCorp, Aug 2024
+Skills
+AWS, Python, Scala, PyTorch
+PostgreSQL, Redis, Airflow, TypeScript
+Go, Java, Snowflake, React

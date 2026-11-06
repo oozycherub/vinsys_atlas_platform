@@ -1,0 +1,26 @@
+Dario Quintanilla
+dario.quintanilla28@mailbox.example | +31 6 8579 7448 | Rotterdam, Netherlands
+Ref: G28
+Summary
+Software Engineer with experience in Go, GraphQL, Java.
+Experience
+Software Engineer - Copperleaf Health
+Aug 2024 - Present
+* Built event pipelines with Go and GraphQL
+* Built batch jobs using Java
+Senior Data Engineer - Ironbark Robotics
+Nov 2020 - Feb 2024
+* Scaled event pipelines with Kubernetes and Elasticsearch
+* Maintained event pipelines using Kafka
+Platform Engineer - Quarry Lane Software
+Jun 2018 - Oct 2020
+* Built deployment tooling with Pandas and AWS
+* Migrated data models using dbt
+Education
+BSc in Computer Science, Northgate College of Engineering, 2016
+Certifications
+AWS Certified Solutions Architect - Amazon Web Services, Mar 2024
+Skills
+Go, GraphQL, Java, Kubernetes
+Elasticsearch, Kafka, Pandas, AWS
+dbt, React, Scala, SQL

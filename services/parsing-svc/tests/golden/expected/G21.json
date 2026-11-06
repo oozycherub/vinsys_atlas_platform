@@ -1,0 +1,71 @@
+{
+  "id": "G21",
+  "format": "pdf2col",
+  "contact": {
+    "full_name": "Viggo Halloran",
+    "email": "viggo.halloran21@mailbox.example",
+    "phone": "+31 6 9701 9320"
+  },
+  "location": "Rotterdam, Netherlands",
+  "summary": "Analytics Engineer with experience in Terraform, GraphQL, TypeScript.",
+  "work_history": [
+    {
+      "title": "Analytics Engineer",
+      "employer": "Ironbark Robotics",
+      "start": "2022-04",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Scaled customer APIs with Terraform and GraphQL",
+        "Maintained event pipelines using TypeScript"
+      ],
+      "skills": [
+        "Terraform",
+        "GraphQL",
+        "TypeScript"
+      ]
+    },
+    {
+      "title": "Data Engineer",
+      "employer": "Quarry Lane Software",
+      "start": "2020-08",
+      "end": "2022-05",
+      "is_current": false,
+      "responsibilities": [
+        "Maintained batch jobs with dbt and Snowflake",
+        "Built reporting services using Elasticsearch"
+      ],
+      "skills": [
+        "dbt",
+        "Snowflake",
+        "Elasticsearch"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Westmarch University",
+      "degree": "MSc",
+      "field": "Data Science",
+      "end_year": 2020
+    }
+  ],
+  "certifications": [],
+  "skills": [
+    "Terraform",
+    "GraphQL",
+    "TypeScript",
+    "dbt",
+    "Snowflake",
+    "Elasticsearch",
+    "Scala",
+    "React",
+    "Linux"
+  ],
+  "skills_line_extra": [
+    "Scala",
+    "React",
+    "Linux"
+  ],
+  "file": "G21.pdf"
+}

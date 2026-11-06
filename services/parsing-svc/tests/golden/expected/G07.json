@@ -1,0 +1,96 @@
+{
+  "id": "G07",
+  "format": "docx",
+  "contact": {
+    "full_name": "Hugo Jaramillo",
+    "email": "hugo.jaramillo7@mailbox.example",
+    "phone": "+31 6 1527 3851"
+  },
+  "location": "Rotterdam, Netherlands",
+  "summary": "Data Engineer with experience in dbt, Docker, Redis.",
+  "work_history": [
+    {
+      "title": "Data Engineer",
+      "employer": "Silverline Payments",
+      "start": "2022-12",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Scaled reporting services with dbt and Docker",
+        "Automated event pipelines using Redis"
+      ],
+      "skills": [
+        "dbt",
+        "Docker",
+        "Redis"
+      ]
+    },
+    {
+      "title": "Analytics Engineer",
+      "employer": "Northwind Systems",
+      "start": "2019-10",
+      "end": "2022-05",
+      "is_current": false,
+      "responsibilities": [
+        "Designed reporting services with Grafana and SQL",
+        "Scaled event pipelines using Linux"
+      ],
+      "skills": [
+        "Grafana",
+        "SQL",
+        "Linux"
+      ]
+    },
+    {
+      "title": "Platform Engineer",
+      "employer": "Orbitfield Labs",
+      "start": "2017-11",
+      "end": "2019-11",
+      "is_current": false,
+      "responsibilities": [
+        "Maintained reporting services with Kafka and Go",
+        "Scaled event pipelines using GraphQL"
+      ],
+      "skills": [
+        "Kafka",
+        "Go",
+        "GraphQL"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Riverbend Polytechnic",
+      "degree": "MSc",
+      "field": "Applied Mathematics",
+      "end_year": 2017
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Terraform Associate",
+      "issuer": "HashiCorp",
+      "issued": "2024-04"
+    }
+  ],
+  "skills": [
+    "dbt",
+    "Docker",
+    "Redis",
+    "Grafana",
+    "SQL",
+    "Linux",
+    "Kafka",
+    "Go",
+    "GraphQL",
+    "AWS",
+    "React",
+    "Elasticsearch"
+  ],
+  "skills_line_extra": [
+    "AWS",
+    "React",
+    "Elasticsearch"
+  ],
+  "file": "G07.docx"
+}

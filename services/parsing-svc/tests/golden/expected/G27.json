@@ -1,0 +1,71 @@
+{
+  "id": "G27",
+  "format": "docx",
+  "contact": {
+    "full_name": "Celine Jaramillo",
+    "email": "celine.jaramillo27@mailbox.example",
+    "phone": "+31 6 1332 2914"
+  },
+  "location": "Tampere, Finland",
+  "summary": "Analytics Engineer with experience in Docker, Python, PyTorch.",
+  "work_history": [
+    {
+      "title": "Analytics Engineer",
+      "employer": "Tidewater Logistics",
+      "start": "2022-08",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Scaled data models with Docker and Python",
+        "Built data models using PyTorch"
+      ],
+      "skills": [
+        "Docker",
+        "Python",
+        "PyTorch"
+      ]
+    },
+    {
+      "title": "Machine Learning Engineer",
+      "employer": "Meadowbrook Energy",
+      "start": "2018-01",
+      "end": "2022-12",
+      "is_current": false,
+      "responsibilities": [
+        "Scaled deployment tooling with Elasticsearch and Linux",
+        "Migrated batch jobs using PostgreSQL"
+      ],
+      "skills": [
+        "Elasticsearch",
+        "Linux",
+        "PostgreSQL"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Riverbend Polytechnic",
+      "degree": "MSc",
+      "field": "Applied Mathematics",
+      "end_year": 2016
+    }
+  ],
+  "certifications": [],
+  "skills": [
+    "Docker",
+    "Python",
+    "PyTorch",
+    "Elasticsearch",
+    "Linux",
+    "PostgreSQL",
+    "Kafka",
+    "Snowflake",
+    "Spark"
+  ],
+  "skills_line_extra": [
+    "Kafka",
+    "Snowflake",
+    "Spark"
+  ],
+  "file": "G27.docx"
+}

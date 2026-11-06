@@ -1,0 +1,24 @@
+Ines Lindqvist
+ines.lindqvist33@mailbox.example | +31 6 4431 5464 | Valencia, Spain
+Ref: G33
+Summary
+Software Engineer with experience in Kafka, Elasticsearch, Grafana.
+Experience
+Software Engineer - Ironbark Robotics
+Nov 2024 - Present
+* Built customer APIs with Kafka and Elasticsearch
+* Migrated reporting services using Grafana
+Site Reliability Engineer - Quarry Lane Software
+Feb 2022 - Mar 2024
+* Migrated event pipelines with TypeScript and SQL
+* Scaled customer APIs using Kubernetes
+Platform Engineer - Silverline Payments
+Aug 2018 - Dec 2022
+* Built deployment tooling with Spark and Redis
+* Scaled deployment tooling using Snowflake
+Education
+MSc in Data Science, Northgate College of Engineering, 2016
+Skills
+Kafka, Elasticsearch, Grafana, TypeScript
+SQL, Kubernetes, Spark, Redis
+Snowflake, Java, dbt, Go

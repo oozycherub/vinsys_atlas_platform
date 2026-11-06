@@ -1,0 +1,71 @@
+{
+  "id": "G12",
+  "format": "docx",
+  "contact": {
+    "full_name": "Mirela Eskildsen",
+    "email": "mirela.eskildsen12@mailbox.example",
+    "phone": "+31 6 6545 3596"
+  },
+  "location": "Valencia, Spain",
+  "summary": "Platform Engineer with experience in PyTorch, Python, Go.",
+  "work_history": [
+    {
+      "title": "Platform Engineer",
+      "employer": "Northwind Systems",
+      "start": "2023-04",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Scaled customer APIs with PyTorch and Python",
+        "Automated data models using Go"
+      ],
+      "skills": [
+        "PyTorch",
+        "Python",
+        "Go"
+      ]
+    },
+    {
+      "title": "Analytics Engineer",
+      "employer": "Orbitfield Labs",
+      "start": "2021-11",
+      "end": "2023-03",
+      "is_current": false,
+      "responsibilities": [
+        "Migrated event pipelines with Redis and Snowflake",
+        "Migrated data models using SQL"
+      ],
+      "skills": [
+        "Redis",
+        "Snowflake",
+        "SQL"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Riverbend Polytechnic",
+      "degree": "BSc",
+      "field": "Computer Science",
+      "end_year": 2019
+    }
+  ],
+  "certifications": [],
+  "skills": [
+    "PyTorch",
+    "Python",
+    "Go",
+    "Redis",
+    "Snowflake",
+    "SQL",
+    "AWS",
+    "GraphQL",
+    "Elasticsearch"
+  ],
+  "skills_line_extra": [
+    "AWS",
+    "GraphQL",
+    "Elasticsearch"
+  ],
+  "file": "G12.docx"
+}

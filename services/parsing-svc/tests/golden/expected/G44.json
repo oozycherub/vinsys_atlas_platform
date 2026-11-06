@@ -1,0 +1,96 @@
+{
+  "id": "G44",
+  "format": "pdf",
+  "contact": {
+    "full_name": "Tobias Ivanescu",
+    "email": "tobias.ivanescu44@mailbox.example",
+    "phone": "+31 6 4663 6847"
+  },
+  "location": "Gdansk, Poland",
+  "summary": "Software Engineer with experience in Linux, PyTorch, SQL.",
+  "work_history": [
+    {
+      "title": "Software Engineer",
+      "employer": "Meadowbrook Energy",
+      "start": "2022-08",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Scaled reporting services with Linux and PyTorch",
+        "Designed data models using SQL"
+      ],
+      "skills": [
+        "Linux",
+        "PyTorch",
+        "SQL"
+      ]
+    },
+    {
+      "title": "Data Engineer",
+      "employer": "Bluefjord Analytics",
+      "start": "2020-08",
+      "end": "2022-09",
+      "is_current": false,
+      "responsibilities": [
+        "Automated reporting services with Python and Kafka",
+        "Maintained customer APIs using Go"
+      ],
+      "skills": [
+        "Python",
+        "Kafka",
+        "Go"
+      ]
+    },
+    {
+      "title": "Software Engineer",
+      "employer": "Granite Peak Retail",
+      "start": "2016-05",
+      "end": "2020-03",
+      "is_current": false,
+      "responsibilities": [
+        "Designed reporting services with Elasticsearch and TypeScript",
+        "Designed batch jobs using Pandas"
+      ],
+      "skills": [
+        "Elasticsearch",
+        "TypeScript",
+        "Pandas"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Ashford Technical University",
+      "degree": "BSc",
+      "field": "Computer Science",
+      "end_year": 2015
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "AWS Certified Solutions Architect",
+      "issuer": "Amazon Web Services",
+      "issued": "2024-11"
+    }
+  ],
+  "skills": [
+    "Linux",
+    "PyTorch",
+    "SQL",
+    "Python",
+    "Kafka",
+    "Go",
+    "Elasticsearch",
+    "TypeScript",
+    "Pandas",
+    "Snowflake",
+    "React",
+    "Kubernetes"
+  ],
+  "skills_line_extra": [
+    "Snowflake",
+    "React",
+    "Kubernetes"
+  ],
+  "file": "G44.pdf"
+}

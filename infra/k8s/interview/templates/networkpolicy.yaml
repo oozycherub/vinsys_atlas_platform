@@ -1,0 +1,37 @@
+# Default deny; the API takes traffic from the gateway, agents take none. Both reach Postgres,
+# Redis, Kafka, llm-gateway, taxonomy-svc, tenant-svc and object storage; agents also reach
+# LiveKit and the TTS service.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: default-deny, namespace: atlas-interview }
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: interview-api, namespace: atlas-interview }
+spec:
+  podSelector: { matchLabels: { app.kubernetes.io/name: interview-api } }
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from: [{ namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: atlas-edge } } }]
+  egress:
+    - to: [{ namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: atlas-data } } }]
+    - to: [{ namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: atlas-ai } } }]
+    - to: [{ namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: atlas-core } } }]
+    - ports: [{ port: 53, protocol: UDP }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: interview-agent, namespace: atlas-interview }
+spec:
+  podSelector: { matchLabels: { app.kubernetes.io/name: interview-agent } }
+  policyTypes: [Ingress, Egress]
+  ingress: []
+  egress:
+    - to: [{ namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: atlas-data } } }]
+    - to: [{ namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: atlas-ai } } }]
+    - to: [{ namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: atlas-core } } }]
+    - to: [{ podSelector: { matchLabels: { app.kubernetes.io/name: livekit } } }]
+    - ports: [{ port: 53, protocol: UDP }]

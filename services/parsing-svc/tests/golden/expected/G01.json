@@ -1,0 +1,77 @@
+{
+  "id": "G01",
+  "format": "pdf2col",
+  "contact": {
+    "full_name": "Bram Halloran",
+    "email": "bram.halloran1@mailbox.example",
+    "phone": "+31 6 1960 4244"
+  },
+  "location": "Porto, Portugal",
+  "summary": "Machine Learning Engineer with experience in dbt, TypeScript, Linux.",
+  "work_history": [
+    {
+      "title": "Machine Learning Engineer",
+      "employer": "Bluefjord Analytics",
+      "start": "2022-07",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Automated batch jobs with dbt and TypeScript",
+        "Migrated data models using Linux"
+      ],
+      "skills": [
+        "dbt",
+        "TypeScript",
+        "Linux"
+      ]
+    },
+    {
+      "title": "Backend Engineer",
+      "employer": "Granite Peak Retail",
+      "start": "2020-10",
+      "end": "2022-01",
+      "is_current": false,
+      "responsibilities": [
+        "Built data models with Python and GraphQL",
+        "Built batch jobs using Docker"
+      ],
+      "skills": [
+        "Python",
+        "GraphQL",
+        "Docker"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Westmarch University",
+      "degree": "MSc",
+      "field": "Data Science",
+      "end_year": 2019
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Certified Kubernetes Administrator",
+      "issuer": "CNCF",
+      "issued": "2024-07"
+    }
+  ],
+  "skills": [
+    "dbt",
+    "TypeScript",
+    "Linux",
+    "Python",
+    "GraphQL",
+    "Docker",
+    "Pandas",
+    "Kubernetes",
+    "Airflow"
+  ],
+  "skills_line_extra": [
+    "Pandas",
+    "Kubernetes",
+    "Airflow"
+  ],
+  "file": "G01.pdf"
+}

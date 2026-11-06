@@ -1,0 +1,77 @@
+{
+  "id": "G14",
+  "format": "pdf",
+  "contact": {
+    "full_name": "Odile Szabo",
+    "email": "odile.szabo14@mailbox.example",
+    "phone": "+31 6 9446 1093"
+  },
+  "location": "Rotterdam, Netherlands",
+  "summary": "Backend Engineer with experience in TypeScript, Elasticsearch, PyTorch.",
+  "work_history": [
+    {
+      "title": "Backend Engineer",
+      "employer": "Quarry Lane Software",
+      "start": "2023-01",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Migrated data models with TypeScript and Elasticsearch",
+        "Migrated deployment tooling using PyTorch"
+      ],
+      "skills": [
+        "TypeScript",
+        "Elasticsearch",
+        "PyTorch"
+      ]
+    },
+    {
+      "title": "Software Engineer",
+      "employer": "Silverline Payments",
+      "start": "2019-07",
+      "end": "2023-10",
+      "is_current": false,
+      "responsibilities": [
+        "Automated batch jobs with Redis and Spark",
+        "Designed reporting services using Python"
+      ],
+      "skills": [
+        "Redis",
+        "Spark",
+        "Python"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Ashford Technical University",
+      "degree": "BEng",
+      "field": "Software Engineering",
+      "end_year": 2017
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Google Professional Data Engineer",
+      "issuer": "Google Cloud",
+      "issued": "2024-06"
+    }
+  ],
+  "skills": [
+    "TypeScript",
+    "Elasticsearch",
+    "PyTorch",
+    "Redis",
+    "Spark",
+    "Python",
+    "Grafana",
+    "Kubernetes",
+    "React"
+  ],
+  "skills_line_extra": [
+    "Grafana",
+    "Kubernetes",
+    "React"
+  ],
+  "file": "G14.pdf"
+}

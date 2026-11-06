@@ -1,0 +1,12 @@
+# RetinaFace mobilenet-0.25 (face detection + 5 landmarks), ONNX, 640x640 BGR minus mean.
+name: "retinaface"
+platform: "onnxruntime_onnx"
+max_batch_size: 32
+input [ { name: "input", data_type: TYPE_FP32, dims: [ 3, 640, 640 ] } ]
+output [
+  { name: "loc", data_type: TYPE_FP32, dims: [ 16800, 4 ] },
+  { name: "conf", data_type: TYPE_FP32, dims: [ 16800, 2 ] },
+  { name: "landms", data_type: TYPE_FP32, dims: [ 16800, 10 ] }
+]
+dynamic_batching { max_queue_delay_microseconds: 10000 }
+instance_group [ { kind: KIND_GPU, count: 1 } ]

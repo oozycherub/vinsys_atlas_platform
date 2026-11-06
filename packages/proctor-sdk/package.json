@@ -1,0 +1,11 @@
+{
+  "name": "@atlas/proctor-sdk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Client-side proctoring SDK (PRD §2.3b): browser signals, jittered webcam sampling, HMAC hash-chained envelopes, offline queue",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ]
+}

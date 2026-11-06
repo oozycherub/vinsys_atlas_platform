@@ -1,0 +1,77 @@
+{
+  "id": "G40",
+  "format": "pdf",
+  "contact": {
+    "full_name": "Pavel Achterberg",
+    "email": "pavel.achterberg40@mailbox.example",
+    "phone": "+31 6 5992 3818"
+  },
+  "location": "Valencia, Spain",
+  "summary": "Machine Learning Engineer with experience in Terraform, Python, PyTorch.",
+  "work_history": [
+    {
+      "title": "Machine Learning Engineer",
+      "employer": "Copperleaf Health",
+      "start": "2022-06",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Maintained data models with Terraform and Python",
+        "Designed data models using PyTorch"
+      ],
+      "skills": [
+        "Terraform",
+        "Python",
+        "PyTorch"
+      ]
+    },
+    {
+      "title": "Data Engineer",
+      "employer": "Ironbark Robotics",
+      "start": "2018-07",
+      "end": "2022-12",
+      "is_current": false,
+      "responsibilities": [
+        "Automated deployment tooling with Docker and AWS",
+        "Maintained batch jobs using TypeScript"
+      ],
+      "skills": [
+        "Docker",
+        "AWS",
+        "TypeScript"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Lakeside Institute of Technology",
+      "degree": "BSc",
+      "field": "Computer Science",
+      "end_year": 2017
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "AWS Certified Solutions Architect",
+      "issuer": "Amazon Web Services",
+      "issued": "2024-10"
+    }
+  ],
+  "skills": [
+    "Terraform",
+    "Python",
+    "PyTorch",
+    "Docker",
+    "AWS",
+    "TypeScript",
+    "Spark",
+    "Pandas",
+    "Redis"
+  ],
+  "skills_line_extra": [
+    "Spark",
+    "Pandas",
+    "Redis"
+  ],
+  "file": "G40.pdf"
+}

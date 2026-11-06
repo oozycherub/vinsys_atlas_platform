@@ -1,0 +1,539 @@
+openapi: 3.1.0
+info:
+  title: Atlas parsing-svc
+  description: Résumé parsing and embedding pipeline (brick 6).
+  version: 1.0.0
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+paths:
+  /v1/resumes/{document_id}:parse:
+    post:
+      tags:
+      - parsing
+      summary: Parse
+      operationId: parse_v1_resumes__document_id__parse_post
+      parameters:
+      - name: document_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          title: Document Id
+      - name: tenant_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          - type: 'null'
+          description: Platform principals only.
+          title: Tenant Id
+        description: Platform principals only.
+      - name: idempotency-key
+        in: header
+        required: true
+        schema:
+          type: string
+          minLength: 8
+          maxLength: 128
+          title: Idempotency-Key
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Parse V1 Resumes  Document Id  Parse Post
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+        '422':
+          $ref: '#/components/responses/422'
+        '503':
+          $ref: '#/components/responses/503'
+  /v1/parse-jobs/{job_id}:
+    get:
+      tags:
+      - parsing
+      summary: Get Job
+      operationId: get_job_v1_parse_jobs__job_id__get
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      - name: tenant_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          - type: 'null'
+          description: Platform principals only.
+          title: Tenant Id
+        description: Platform principals only.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Job V1 Parse Jobs  Job Id  Get
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+  /v1/parse-jobs/{job_id}/events:
+    get:
+      tags:
+      - parsing
+      summary: Job Events
+      operationId: job_events_v1_parse_jobs__job_id__events_get
+      parameters:
+      - name: job_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Job Id
+      - name: tenant_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          - type: 'null'
+          description: Platform principals only.
+          title: Tenant Id
+        description: Platform principals only.
+      responses:
+        '200':
+          description: 'Server-sent events: progress (on every change), then done.'
+          content:
+            text/event-stream:
+              schema:
+                type: string
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+  /v1/resumes:bulkImport:
+    post:
+      tags:
+      - parsing
+      summary: Bulk Import
+      operationId: bulk_import_v1_resumes_bulkImport_post
+      parameters:
+      - name: tenant_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          - type: 'null'
+          description: Platform principals only.
+          title: Tenant Id
+        description: Platform principals only.
+      responses:
+        '202':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Bulk Import V1 Resumes Bulkimport Post
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '422':
+          $ref: '#/components/responses/422'
+        '503':
+          $ref: '#/components/responses/503'
+      requestBody:
+        required: true
+        content:
+          application/zip:
+            schema:
+              type: string
+              format: binary
+        description: A zip of at most 500 résumés (PDF, DOCX, DOC, PNG, JPEG, TXT), ≤ 200 MB.
+  /v1/parse-batches/{batch_id}:
+    get:
+      tags:
+      - parsing
+      summary: Get Batch
+      operationId: get_batch_v1_parse_batches__batch_id__get
+      parameters:
+      - name: batch_id
+        in: path
+        required: true
+        schema:
+          type: string
+          title: Batch Id
+      - name: tenant_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          - type: 'null'
+          description: Platform principals only.
+          title: Tenant Id
+        description: Platform principals only.
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Batch V1 Parse Batches  Batch Id  Get
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+  /v1/resume-embeddings:search:
+    post:
+      tags:
+      - embeddings
+      summary: Search
+      operationId: search_v1_resume_embeddings_search_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchBody'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Search V1 Resume Embeddings Search Post
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '409':
+          $ref: '#/components/responses/409'
+  /v1/embedding-models:
+    get:
+      tags:
+      - embeddings
+      summary: Models
+      operationId: models_v1_embedding_models_get
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Models V1 Embedding Models Get
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+  /v1/embedding-models/shadow:
+    put:
+      tags:
+      - embeddings
+      summary: Set Shadow
+      operationId: set_shadow_v1_embedding_models_shadow_put
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShadowBody'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Set Shadow V1 Embedding Models Shadow Put
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '422':
+          $ref: '#/components/responses/422'
+  /v1/embedding-models:backfill:
+    post:
+      tags:
+      - embeddings
+      summary: Backfill
+      operationId: backfill_v1_embedding_models_backfill_post
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BackfillBody'
+        required: true
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Backfill V1 Embedding Models Backfill Post
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '422':
+          $ref: '#/components/responses/422'
+        '503':
+          $ref: '#/components/responses/503'
+  /v1/embedding-models:promote:
+    post:
+      tags:
+      - embeddings
+      summary: Promote
+      operationId: promote_v1_embedding_models_promote_post
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                additionalProperties: true
+                type: object
+                title: Response Promote V1 Embedding Models Promote Post
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '422':
+          $ref: '#/components/responses/422'
+components:
+  schemas:
+    BackfillBody:
+      properties:
+        tenant_id:
+          type: string
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          title: Tenant Id
+        limit:
+          type: integer
+          maximum: 1000.0
+          minimum: 1.0
+          title: Limit
+          default: 200
+      additionalProperties: false
+      type: object
+      required:
+      - tenant_id
+      title: BackfillBody
+    SearchBody:
+      properties:
+        tenant_id:
+          type: string
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          title: Tenant Id
+        model_id:
+          type: string
+          maxLength: 100
+          title: Model Id
+        vector:
+          items:
+            type: number
+          type: array
+          maxItems: 1024
+          minItems: 1024
+          title: Vector
+        k:
+          type: integer
+          maximum: 3000.0
+          minimum: 1.0
+          title: K
+          default: 100
+        candidate_ids:
+          anyOf:
+          - items:
+              type: string
+              pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+            type: array
+            maxItems: 1000
+          - type: 'null'
+          title: Candidate Ids
+        per_candidate:
+          anyOf:
+          - type: integer
+            maximum: 10.0
+            minimum: 1.0
+          - type: 'null'
+          title: Per Candidate
+        include_vectors:
+          type: boolean
+          title: Include Vectors
+          default: false
+        chunk_types:
+          anyOf:
+          - items:
+              type: string
+              enum:
+              - profile_summary
+              - experience
+              - projects
+              - skills
+              - education
+              - certifications
+            type: array
+          - type: 'null'
+          title: Chunk Types
+      additionalProperties: false
+      type: object
+      required:
+      - tenant_id
+      - model_id
+      - vector
+      title: SearchBody
+    ShadowBody:
+      properties:
+        model_id:
+          anyOf:
+          - type: string
+            maxLength: 100
+          - type: 'null'
+          title: Model Id
+      additionalProperties: false
+      type: object
+      required:
+      - model_id
+      title: ShadowBody
+    Problem:
+      type: object
+      description: RFC 9457 problem document; `code` is the stable machine-readable error.
+      required:
+      - type
+      - title
+      - status
+      - code
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        code:
+          type: string
+        request_id:
+          type: string
+      additionalProperties: true
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Tenant users act on their own tenant; platform staff and services (scopes resumes:parse,
+        resumes:read, embeddings:search) pass tenant_id.
+  responses:
+    '400':
+      description: Invalid request (VALIDATION_FAILED, TENANT_REQUIRED, INVALID_ARCHIVE, …).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '401':
+      description: Missing or invalid bearer token.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '403':
+      description: The caller lacks the role, scope or tenant.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '404':
+      description: Document, job or import not found in this tenant.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '409':
+      description: IDEMPOTENCY_KEY_REUSED, or EMBEDDING_MODEL_MISMATCH (with active_model).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '422':
+      description: Domain rule (DOCUMENT_NOT_PARSEABLE, TOO_MANY_FILES, NO_SHADOW_MODEL, …).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '503':
+      description: A dependency (profile-svc, storage) is unavailable.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+servers:
+- url: https://parsing.internal.atlas.dev
+security:
+- bearer: []

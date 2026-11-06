@@ -1,0 +1,401 @@
+openapi: 3.1.0
+info:
+  title: Atlas sandbox-svc
+  version: 1.0.0
+  license: { name: Proprietary, identifier: LicenseRef-Proprietary }
+  description: >
+    Multi-language code execution judge (docs/prompts/09-sandbox-svc.md, PRD §2.2). Internal API:
+    candidates reach it only through assessment-svc, which checks the session and calls with a
+    service token (scopes `sandbox:execute`, `sandbox:bundles`) and the tenant as `tenant_id`
+    (ADR-0006). Staff tokens may read submissions of their own tenant. Expected outputs and hidden
+    inputs are never returned. Errors are RFC 9457 problem documents.
+servers:
+  - url: http://sandbox-svc:8089
+security:
+  - bearer: []
+
+paths:
+  /v1/sandbox/languages:
+    get:
+      operationId: listLanguages
+      summary: Enabled languages with their default limits.
+      responses:
+        '200':
+          description: Languages.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/Language' } }
+        '401': { $ref: '#/components/responses/Problem' }
+
+  /v1/test-case-bundles/{questionId}/versions/{version}:
+    parameters:
+      - { name: questionId, in: path, required: true, schema: { type: string, format: uuid } }
+      - { name: version, in: path, required: true, schema: { type: integer, minimum: 1 } }
+      - $ref: '#/components/parameters/TenantId'
+    put:
+      operationId: putTestCaseBundle
+      summary: >
+        Register a question version's tests, checker, limits and reference solution (scope
+        sandbox:bundles). Queues verification: the reference runs 5× and must be accepted every
+        time with identical results. Same content again is a no-op; a verified bundle is immutable.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/BundleInput' }
+      responses:
+        '200': { $ref: '#/components/responses/Bundle' }
+        '201': { $ref: '#/components/responses/Bundle' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '409':
+          description: BUNDLE_IMMUTABLE (a verified bundle cannot change).
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+        '422':
+          description: INVALID_TESTS, INVALID_LIMITS, INVALID_CHECKER, UNKNOWN_LANGUAGE or LANGUAGE_DISABLED.
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+    get:
+      operationId: getTestCaseBundle
+      summary: Verification status (scope sandbox:bundles, or tenant staff).
+      responses:
+        '200': { $ref: '#/components/responses/Bundle' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /v1/sessions/{sessionId}/questions/{questionId}/runs:
+    post:
+      operationId: createRun
+      summary: >
+        Run against the sample tests, or against custom stdin (scope sandbox:execute). At most one
+        run per 3 s per session. Runs are kept for 24 h.
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+        - $ref: '#/components/parameters/QuestionId'
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/ExecutionInput'
+                - type: object
+                  properties:
+                    stdin: { type: [string, 'null'], maxLength: 65536 }
+      responses:
+        '202':
+          description: Queued.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  run_id: { type: string, format: uuid }
+                  status: { type: string, const: queued }
+        '409':
+          description: SESSION_NOT_ACTIVE.
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+        '422':
+          description: BUNDLE_NOT_FOUND, LANGUAGE_NOT_ALLOWED, LANGUAGE_DISABLED or SOURCE_TOO_LARGE.
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+        '429':
+          description: RUN_THROTTLED, with Retry-After.
+          headers:
+            Retry-After: { schema: { type: integer } }
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+
+  /v1/runs/{runId}:
+    get:
+      operationId: getRun
+      summary: "A run's result; `wait` long-polls up to 10 s until it finishes."
+      parameters:
+        - { name: runId, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/TenantId'
+        - { name: wait, in: query, schema: { type: integer, minimum: 0, maximum: 10, default: 0 } }
+      responses:
+        '200':
+          description: The run.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Run' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /v1/sessions/{sessionId}/questions/{questionId}/submissions:
+    post:
+      operationId: createSubmission
+      summary: >
+        Judge against all tests (scope sandbox:execute). The same Idempotency-Key returns the same
+        submission. The result is announced as sandbox.submission.judged.v1.
+      parameters:
+        - $ref: '#/components/parameters/SessionId'
+        - $ref: '#/components/parameters/QuestionId'
+        - $ref: '#/components/parameters/TenantId'
+        - {
+            name: Idempotency-Key,
+            in: header,
+            required: true,
+            schema: { type: string, minLength: 8, maxLength: 128 },
+          }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ExecutionInput' }
+      responses:
+        '202':
+          description: Queued (or the existing submission for this key).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  submission_id: { type: string, format: uuid }
+                  status: { type: string }
+        '409':
+          description: SESSION_NOT_ACTIVE.
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+        '422':
+          description: BUNDLE_NOT_VERIFIED, LANGUAGE_NOT_ALLOWED, LANGUAGE_DISABLED or SOURCE_TOO_LARGE.
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+        '428': { $ref: '#/components/responses/Problem' }
+
+  /v1/submissions/{submissionId}:
+    get:
+      operationId: getSubmission
+      summary: >
+        Verdict and per-test summary. Service callers get the candidate view (hidden tests show
+        pass/fail only); tenant staff (`view=staff`) also see metrics, output excerpts and similarity.
+      parameters:
+        - { name: submissionId, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/TenantId'
+        - {
+            name: view,
+            in: query,
+            schema: { type: string, enum: [candidate, staff], default: candidate },
+          }
+      responses:
+        '200':
+          description: The submission.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Submission' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /healthz:
+    get:
+      operationId: healthz
+      summary: Liveness probe.
+      security: []
+      responses:
+        '200': { description: Alive. }
+  /readyz:
+    get:
+      operationId: readyz
+      summary: Readiness probe (database reachable).
+      security: []
+      responses:
+        '200': { description: Ready. }
+        '503': { $ref: '#/components/responses/Problem' }
+
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+
+  parameters:
+    TenantId:
+      name: tenant_id
+      in: query
+      required: false
+      description: Required for service and platform principals; tenant users act on their own tenant.
+      schema: { type: string, format: uuid }
+    SessionId: { name: sessionId, in: path, required: true, schema: { type: string, format: uuid } }
+    QuestionId:
+      { name: questionId, in: path, required: true, schema: { type: string, format: uuid } }
+
+  responses:
+    Problem:
+      description: RFC 9457 problem document.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Bundle:
+      description: The bundle.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Bundle' }
+
+  schemas:
+    Language:
+      type: object
+      properties:
+        language_id: { type: integer }
+        slug: { type: string }
+        name: { type: string }
+        compiled: { type: boolean }
+        default_limits: { $ref: '#/components/schemas/Limits' }
+    Limits:
+      type: object
+      properties:
+        cpu_ms: { type: integer, minimum: 100, maximum: 15000 }
+        wall_ms: { type: integer, minimum: 100, maximum: 30000 }
+        memory_kb: { type: integer, minimum: 16384, maximum: 1048576 }
+        processes: { type: integer, minimum: 1, maximum: 64 }
+        output_kb: { type: integer, minimum: 1, maximum: 8192 }
+    BundleInput:
+      type: object
+      required: [languages, tests, reference_solution]
+      properties:
+        languages:
+          {
+            type: array,
+            items: { type: string },
+            minItems: 1,
+            maxItems: 40,
+            description: Registry slugs.,
+          }
+        tests:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items:
+            type: object
+            required: [input, expected]
+            properties:
+              input: { type: string }
+              expected: { type: string }
+              hidden: { type: boolean, default: true }
+              weight: { type: number, minimum: 0, maximum: 1000, default: 1 }
+        checker:
+          type: object
+          properties:
+            kind:
+              {
+                type: string,
+                enum: [exact, trim_ws, float_tol, unordered_lines, custom],
+                default: trim_ws,
+              }
+            tolerance: { type: number, minimum: 0, maximum: 1 }
+            language: { type: string, description: 'custom only: checker language slug' }
+            source:
+              {
+                type: string,
+                maxLength: 65536,
+                description: 'custom only: reads input.txt, expected.txt, output.txt; exit 0 = pass',
+              }
+        limits: { $ref: '#/components/schemas/Limits' }
+        reference_solution:
+          type: object
+          required: [language, source]
+          properties:
+            language: { type: string }
+            source: { type: string, maxLength: 65536 }
+    Bundle:
+      type: object
+      properties:
+        question_id: { type: string, format: uuid }
+        version: { type: integer }
+        status: { type: string, enum: [pending, verified, flaky, reference_failed] }
+        status_detail: { type: [string, 'null'] }
+        test_count: { type: integer }
+        sample_count: { type: integer }
+        languages: { type: array, items: { type: string } }
+        checksum: { type: string, description: sha256 (hex) of the stored test cases }
+        verified_at: { type: [string, 'null'], format: date-time }
+    ExecutionInput:
+      type: object
+      required: [language, source, question_version, candidate_id]
+      properties:
+        language: { type: string, description: "Registry slug, one of the question's languages." }
+        source: { type: string, maxLength: 65536 }
+        question_version: { type: integer, minimum: 1 }
+        assessment_id: { type: string, format: uuid }
+        candidate_id: { type: string, format: uuid }
+        active_until:
+          type: [string, 'null']
+          format: date-time
+          description: The session deadline (assessment-svc's clock); requests after it get SESSION_NOT_ACTIVE.
+    CaseView:
+      type: object
+      properties:
+        ordinal: { type: integer }
+        hidden: { type: boolean }
+        passed: { type: boolean }
+        verdict:
+          {
+            type: string,
+            description: Sample tests (and staff) only; hidden tests show `passed` only.,
+          }
+        detail: { type: [string, 'null'] }
+        time_ms: { type: [integer, 'null'] }
+        memory_kb: { type: [integer, 'null'] }
+        stdout: { type: [string, 'null'], description: Sample tests (and staff) only. }
+    Run:
+      type: object
+      properties:
+        run_id: { type: string, format: uuid }
+        session_id: { type: string, format: uuid }
+        question_id: { type: string, format: uuid }
+        status: { $ref: '#/components/schemas/Verdict' }
+        stdout: { type: [string, 'null'], maxLength: 65536 }
+        stderr: { type: [string, 'null'], maxLength: 65536 }
+        compile_output: { type: [string, 'null'] }
+        time_ms: { type: [integer, 'null'] }
+        memory_kb: { type: [integer, 'null'] }
+        cases: { type: array, items: { $ref: '#/components/schemas/CaseView' } }
+    Submission:
+      type: object
+      properties:
+        submission_id: { type: string, format: uuid }
+        session_id: { type: string, format: uuid }
+        question_id: { type: string, format: uuid }
+        language: { type: string }
+        status: { $ref: '#/components/schemas/Verdict' }
+        tests_passed: { type: [integer, 'null'] }
+        tests_total: { type: [integer, 'null'] }
+        score_ratio: { type: [number, 'null'] }
+        compile_output: { type: [string, 'null'] }
+        max_cpu_time_ms: { type: [integer, 'null'] }
+        max_memory_kb: { type: [integer, 'null'] }
+        similarity_max: { type: [number, 'null'], description: Staff view only. }
+        similar_submission_id:
+          { type: [string, 'null'], format: uuid, description: Staff view only. }
+        source: { type: string, description: Staff view only. }
+        queued_at: { type: string, format: date-time }
+        finished_at: { type: [string, 'null'], format: date-time }
+        cases: { type: array, items: { $ref: '#/components/schemas/CaseView' } }
+    Verdict:
+      type: string
+      enum:
+        [
+          queued,
+          running,
+          accepted,
+          wrong_answer,
+          time_limit_exceeded,
+          memory_limit_exceeded,
+          output_limit_exceeded,
+          runtime_error,
+          compilation_error,
+          internal_error,
+        ]
+    Problem:
+      type: object
+      required: [type, title, status, detail, instance, code]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        code: { type: string, examples: [RUN_THROTTLED, SESSION_NOT_ACTIVE, LANGUAGE_DISABLED] }
+        request_id: { type: string }
+        retry_after: { type: integer }

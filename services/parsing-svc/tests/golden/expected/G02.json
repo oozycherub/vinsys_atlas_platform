@@ -1,0 +1,77 @@
+{
+  "id": "G02",
+  "format": "docx",
+  "contact": {
+    "full_name": "Celine Okonkwo",
+    "email": "celine.okonkwo2@mailbox.example",
+    "phone": "+31 6 9535 7901"
+  },
+  "location": "Gdansk, Poland",
+  "summary": "Senior Data Engineer with experience in Terraform, Snowflake, Airflow.",
+  "work_history": [
+    {
+      "title": "Senior Data Engineer",
+      "employer": "Quarry Lane Software",
+      "start": "2024-03",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Scaled customer APIs with Terraform and Snowflake",
+        "Automated event pipelines using Airflow"
+      ],
+      "skills": [
+        "Terraform",
+        "Snowflake",
+        "Airflow"
+      ]
+    },
+    {
+      "title": "Backend Engineer",
+      "employer": "Silverline Payments",
+      "start": "2022-04",
+      "end": "2024-01",
+      "is_current": false,
+      "responsibilities": [
+        "Automated reporting services with Redis and Python",
+        "Maintained customer APIs using Elasticsearch"
+      ],
+      "skills": [
+        "Redis",
+        "Python",
+        "Elasticsearch"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Riverbend Polytechnic",
+      "degree": "BEng",
+      "field": "Software Engineering",
+      "end_year": 2020
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Google Professional Data Engineer",
+      "issuer": "Google Cloud",
+      "issued": "2024-05"
+    }
+  ],
+  "skills": [
+    "Terraform",
+    "Snowflake",
+    "Airflow",
+    "Redis",
+    "Python",
+    "Elasticsearch",
+    "Go",
+    "Spark",
+    "PyTorch"
+  ],
+  "skills_line_extra": [
+    "Go",
+    "Spark",
+    "PyTorch"
+  ],
+  "file": "G02.docx"
+}

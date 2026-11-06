@@ -1,0 +1,90 @@
+{
+  "id": "G00",
+  "format": "pdf",
+  "contact": {
+    "full_name": "Aria Achterberg",
+    "email": "aria.achterberg0@mailbox.example",
+    "phone": "+31 6 8028 2624"
+  },
+  "location": "Rotterdam, Netherlands",
+  "summary": "Analytics Engineer with experience in React, dbt, GraphQL.",
+  "work_history": [
+    {
+      "title": "Analytics Engineer",
+      "employer": "Northwind Systems",
+      "start": "2023-02",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Designed reporting services with React and dbt",
+        "Scaled reporting services using GraphQL"
+      ],
+      "skills": [
+        "React",
+        "dbt",
+        "GraphQL"
+      ]
+    },
+    {
+      "title": "Site Reliability Engineer",
+      "employer": "Orbitfield Labs",
+      "start": "2020-11",
+      "end": "2023-08",
+      "is_current": false,
+      "responsibilities": [
+        "Designed event pipelines with Docker and Java",
+        "Scaled batch jobs using Terraform"
+      ],
+      "skills": [
+        "Docker",
+        "Java",
+        "Terraform"
+      ]
+    },
+    {
+      "title": "Site Reliability Engineer",
+      "employer": "Lanternfish Media",
+      "start": "2017-03",
+      "end": "2020-08",
+      "is_current": false,
+      "responsibilities": [
+        "Scaled reporting services with PyTorch and AWS",
+        "Automated reporting services using Python"
+      ],
+      "skills": [
+        "PyTorch",
+        "AWS",
+        "Python"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Lakeside Institute of Technology",
+      "degree": "BSc",
+      "field": "Computer Science",
+      "end_year": 2017
+    }
+  ],
+  "certifications": [],
+  "skills": [
+    "React",
+    "dbt",
+    "GraphQL",
+    "Docker",
+    "Java",
+    "Terraform",
+    "PyTorch",
+    "AWS",
+    "Python",
+    "Linux",
+    "Scala",
+    "Grafana"
+  ],
+  "skills_line_extra": [
+    "Linux",
+    "Scala",
+    "Grafana"
+  ],
+  "file": "G00.pdf"
+}

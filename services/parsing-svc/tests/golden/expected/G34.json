@@ -1,0 +1,77 @@
+{
+  "id": "G34",
+  "format": "pdf",
+  "contact": {
+    "full_name": "Jonas Szabo",
+    "email": "jonas.szabo34@mailbox.example",
+    "phone": "+31 6 1619 2477"
+  },
+  "location": "Tampere, Finland",
+  "summary": "Software Engineer with experience in Kafka, Docker, Java.",
+  "work_history": [
+    {
+      "title": "Software Engineer",
+      "employer": "Lanternfish Media",
+      "start": "2024-07",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Designed deployment tooling with Kafka and Docker",
+        "Maintained event pipelines using Java"
+      ],
+      "skills": [
+        "Kafka",
+        "Docker",
+        "Java"
+      ]
+    },
+    {
+      "title": "Site Reliability Engineer",
+      "employer": "Tidewater Logistics",
+      "start": "2022-01",
+      "end": "2024-05",
+      "is_current": false,
+      "responsibilities": [
+        "Migrated reporting services with Elasticsearch and GraphQL",
+        "Scaled event pipelines using AWS"
+      ],
+      "skills": [
+        "Elasticsearch",
+        "GraphQL",
+        "AWS"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Ashford Technical University",
+      "degree": "BEng",
+      "field": "Software Engineering",
+      "end_year": 2020
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Google Professional Data Engineer",
+      "issuer": "Google Cloud",
+      "issued": "2024-07"
+    }
+  ],
+  "skills": [
+    "Kafka",
+    "Docker",
+    "Java",
+    "Elasticsearch",
+    "GraphQL",
+    "AWS",
+    "PostgreSQL",
+    "Linux",
+    "Airflow"
+  ],
+  "skills_line_extra": [
+    "PostgreSQL",
+    "Linux",
+    "Airflow"
+  ],
+  "file": "G34.pdf"
+}

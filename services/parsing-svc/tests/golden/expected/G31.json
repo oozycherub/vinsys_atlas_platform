@@ -1,0 +1,96 @@
+{
+  "id": "G31",
+  "format": "pdf2col",
+  "contact": {
+    "full_name": "Greta Rasmussen",
+    "email": "greta.rasmussen31@mailbox.example",
+    "phone": "+31 6 1647 1568"
+  },
+  "location": "Leeds, United Kingdom",
+  "summary": "Site Reliability Engineer with experience in Go, Scala, Terraform.",
+  "work_history": [
+    {
+      "title": "Site Reliability Engineer",
+      "employer": "Silverline Payments",
+      "start": "2023-01",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Migrated customer APIs with Go and Scala",
+        "Maintained event pipelines using Terraform"
+      ],
+      "skills": [
+        "Go",
+        "Scala",
+        "Terraform"
+      ]
+    },
+    {
+      "title": "Data Engineer",
+      "employer": "Northwind Systems",
+      "start": "2020-03",
+      "end": "2023-01",
+      "is_current": false,
+      "responsibilities": [
+        "Automated batch jobs with dbt and Kubernetes",
+        "Designed batch jobs using Elasticsearch"
+      ],
+      "skills": [
+        "dbt",
+        "Kubernetes",
+        "Elasticsearch"
+      ]
+    },
+    {
+      "title": "Senior Data Engineer",
+      "employer": "Orbitfield Labs",
+      "start": "2018-10",
+      "end": "2020-06",
+      "is_current": false,
+      "responsibilities": [
+        "Scaled data models with SQL and PyTorch",
+        "Migrated batch jobs using Docker"
+      ],
+      "skills": [
+        "SQL",
+        "PyTorch",
+        "Docker"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Westmarch University",
+      "degree": "MSc",
+      "field": "Applied Mathematics",
+      "end_year": 2017
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Terraform Associate",
+      "issuer": "HashiCorp",
+      "issued": "2024-11"
+    }
+  ],
+  "skills": [
+    "Go",
+    "Scala",
+    "Terraform",
+    "dbt",
+    "Kubernetes",
+    "Elasticsearch",
+    "SQL",
+    "PyTorch",
+    "Docker",
+    "Snowflake",
+    "Java",
+    "Spark"
+  ],
+  "skills_line_extra": [
+    "Snowflake",
+    "Java",
+    "Spark"
+  ],
+  "file": "G31.pdf"
+}

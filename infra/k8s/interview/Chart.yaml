@@ -1,0 +1,6 @@
+apiVersion: v2
+name: atlas-interview
+description: interview-svc API (REST + text WebSocket), voice agent workers (GPU STT), LiveKit SFU, KEDA autoscaling on pending sessions (brick 11, PRD §2.4).
+type: application
+version: 1.0.0
+appVersion: '1.0.0'

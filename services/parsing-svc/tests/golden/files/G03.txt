@@ -1,0 +1,20 @@
+Dario Brannigan
+dario.brannigan3@mailbox.example | +31 6 9148 6898 | Leeds, United Kingdom
+Ref: G03
+Summary
+Data Engineer with experience in React, GraphQL, Java.
+Experience
+Data Engineer - Tidewater Logistics
+Aug 2022 - Present
+* Scaled deployment tooling with React and GraphQL
+* Built customer APIs using Java
+Data Engineer - Meadowbrook Energy
+Aug 2018 - Sep 2022
+* Scaled reporting services with Kafka and AWS
+* Scaled data models using PostgreSQL
+Education
+MSc in Applied Mathematics, Northgate College of Engineering, 2018
+Skills
+React, GraphQL, Java, Kafka
+AWS, PostgreSQL, Linux, SQL
+Snowflake

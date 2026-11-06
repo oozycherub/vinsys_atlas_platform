@@ -1,0 +1,90 @@
+{
+  "id": "G45",
+  "format": "pdf",
+  "contact": {
+    "full_name": "Ulla Petrakis",
+    "email": "ulla.petrakis45@mailbox.example",
+    "phone": "+31 6 1619 8038"
+  },
+  "location": "Leeds, United Kingdom",
+  "summary": "Site Reliability Engineer with experience in React, Airflow, PostgreSQL.",
+  "work_history": [
+    {
+      "title": "Site Reliability Engineer",
+      "employer": "Ironbark Robotics",
+      "start": "2023-02",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Migrated batch jobs with React and Airflow",
+        "Designed data models using PostgreSQL"
+      ],
+      "skills": [
+        "React",
+        "Airflow",
+        "PostgreSQL"
+      ]
+    },
+    {
+      "title": "Data Engineer",
+      "employer": "Quarry Lane Software",
+      "start": "2019-10",
+      "end": "2023-03",
+      "is_current": false,
+      "responsibilities": [
+        "Automated data models with PyTorch and Kafka",
+        "Maintained data models using Terraform"
+      ],
+      "skills": [
+        "PyTorch",
+        "Kafka",
+        "Terraform"
+      ]
+    },
+    {
+      "title": "Platform Engineer",
+      "employer": "Silverline Payments",
+      "start": "2017-06",
+      "end": "2019-04",
+      "is_current": false,
+      "responsibilities": [
+        "Automated event pipelines with AWS and Spark",
+        "Designed data models using Elasticsearch"
+      ],
+      "skills": [
+        "AWS",
+        "Spark",
+        "Elasticsearch"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Lakeside Institute of Technology",
+      "degree": "MSc",
+      "field": "Data Science",
+      "end_year": 2017
+    }
+  ],
+  "certifications": [],
+  "skills": [
+    "React",
+    "Airflow",
+    "PostgreSQL",
+    "PyTorch",
+    "Kafka",
+    "Terraform",
+    "AWS",
+    "Spark",
+    "Elasticsearch",
+    "Java",
+    "Redis",
+    "Scala"
+  ],
+  "skills_line_extra": [
+    "Java",
+    "Redis",
+    "Scala"
+  ],
+  "file": "G45.pdf"
+}

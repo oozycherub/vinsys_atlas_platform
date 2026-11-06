@@ -1,0 +1,473 @@
+openapi: 3.1.0
+info:
+  title: Atlas profile-svc
+  version: 1.0.0
+  license: { name: Proprietary, identifier: LicenseRef-Proprietary }
+  description: >
+    Candidate and employee profiles, encrypted PII, résumé intake, the skill evidence ledger
+    with fused proficiency, and data-subject requests (docs/prompts/04-profile-svc.md).
+    PII is decrypted only for callers with pii:read (tenant_admin, recruiter, hiring_manager,
+    service principals with scope pii:read, and the person themself). Employees and candidates
+    see only their own profile. All errors are RFC 9457 problem documents.
+servers:
+  - url: http://profile-svc:8084
+security:
+  - bearer: []
+
+paths:
+  /v1/candidates:
+    post:
+      operationId: createCandidate
+      summary: 'Create a candidate (Idempotency-Key). The response never echoes PII.'
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateCandidateRequest' }
+      responses:
+        '201': { $ref: '#/components/responses/CandidateWithETag' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '409':
+          description: CANDIDATE_EMAIL_TAKEN (with candidate_id) or another unique conflict.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+    get:
+      operationId: listCandidates
+      summary: 'A page of candidates (no PII), or an exact email match via the blind index (pii:read).'
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - { name: email, in: query, schema: { type: string, format: email } }
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 100, default: 20 },
+          }
+        - { name: cursor, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: Candidates.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/Candidate' } }
+                  next_cursor: { type: [string, 'null'] }
+        '403': { $ref: '#/components/responses/Problem' }
+
+  /v1/candidates/{candidateId}:
+    parameters:
+      - $ref: '#/components/parameters/CandidateId'
+      - $ref: '#/components/parameters/TenantId'
+    get:
+      operationId: getCandidate
+      summary: A candidate; PII decrypted only for pii:read.
+      responses:
+        '200': { $ref: '#/components/responses/CandidateWithETag' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: patchCandidate
+      summary: 'Update attributes, PII (pii:read) or legal hold (tenant_admin).'
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PatchCandidateRequest' }
+      responses:
+        '200': { $ref: '#/components/responses/CandidateWithETag' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '412': { $ref: '#/components/responses/Problem' }
+        '428': { $ref: '#/components/responses/Problem' }
+
+  /v1/candidates/{candidateId}/skill-evidence:
+    post:
+      operationId: addSkillEvidence
+      summary: 'Record evidence: self (own profile, reason required), manager/multi_rater (tenant_admin, hiring_manager), system sources (service).'
+      parameters:
+        - $ref: '#/components/parameters/CandidateId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [evidence]
+              properties:
+                tenant_id: { type: string, format: uuid }
+                evidence:
+                  type: array
+                  minItems: 1
+                  maxItems: 100
+                  items: { $ref: '#/components/schemas/EvidenceInput' }
+      responses:
+        '201':
+          description: The recomputed skills.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  skills: { type: array, items: { $ref: '#/components/schemas/CurrentSkill' } }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '503': { $ref: '#/components/responses/Problem' }
+
+  /v1/candidates/{candidateId}/skills:
+    get:
+      operationId: getCandidateSkills
+      summary: Fused current proficiencies (optionally with the evidence ledger).
+      parameters:
+        - $ref: '#/components/parameters/CandidateId'
+        - $ref: '#/components/parameters/TenantId'
+        - { name: include, in: query, schema: { type: string, enum: [evidence] } }
+      responses:
+        '200':
+          description: Skills.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  candidate_id: { type: string, format: uuid }
+                  skills: { type: array, items: { $ref: '#/components/schemas/CurrentSkill' } }
+                  evidence: { type: array, items: { type: object } }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /v1/documents:initiateUpload:
+    post:
+      operationId: initiateUpload
+      summary: 'Presigned PUT (15 min) bound to type, size and SHA-256. Max 10 MB.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [candidate_id, mime_type, byte_size, sha256]
+              properties:
+                tenant_id: { type: string, format: uuid }
+                candidate_id: { type: string, format: uuid }
+                mime_type:
+                  type: string
+                  enum:
+                    - application/pdf
+                    - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+                    - application/msword
+                    - image/png
+                    - image/jpeg
+                    - text/plain
+                byte_size: { type: integer, minimum: 1, maximum: 10485760 }
+                sha256: { type: string, pattern: '^[0-9a-f]{64}$' }
+      responses:
+        '201':
+          description: Upload with these headers to upload_url.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  document_id: { type: string, format: uuid }
+                  upload_url: { type: string, format: uri }
+                  upload_headers: { type: object, additionalProperties: { type: string } }
+                  expires_at: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/Problem' }
+        '409':
+          description: DOCUMENT_DUPLICATE with the existing document_id.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /v1/documents/{documentId}:
+    get:
+      operationId: getDocument
+      summary: Document metadata and parse status.
+      parameters:
+        - { name: documentId, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200': { description: The document. }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /v1/internal/storage-events:
+    post:
+      operationId: storageEvents
+      summary: 'S3/MinIO ObjectCreated notifications. Role service, scope storage-events:write.'
+      description: Verifies size and real content type (magic bytes); mismatches are quarantined. Repeats are no-ops.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  required: [keys]
+                  properties: { keys: { type: array, items: { type: string } } }
+                - type: object
+                  required: [Records]
+                  properties: { Records: { type: array, items: { type: object } } }
+      responses:
+        '200': { description: 'Per key: uploaded | quarantined | ignored | <current status>.' }
+        '403': { $ref: '#/components/responses/Problem' }
+
+  /v1/privacy/requests:
+    post:
+      operationId: createPrivacyRequest
+      summary: 'Access (encrypted export) or erasure (rows, objects, fan-out, certificate). Roles: tenant_admin, super_admin.'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, candidate_id]
+              properties:
+                tenant_id: { type: string, format: uuid }
+                type: { type: string, enum: [access, erasure] }
+                candidate_id: { type: string, format: uuid }
+      responses:
+        '201': { $ref: '#/components/responses/PrivacyRequest' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+
+  /v1/privacy/requests/{requestId}:
+    get:
+      operationId: getPrivacyRequest
+      summary: Status, certificate (erasure) or export (access).
+      parameters:
+        - { name: requestId, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200': { $ref: '#/components/responses/PrivacyRequest' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /v1/privacy:sweepRetention:
+    post:
+      operationId: sweepRetention
+      summary: 'Scheduler: erase inactive candidates past retention (not employees, not legal holds).'
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 500, default: 100 },
+          }
+      responses:
+        '200': { description: '{erased: [candidate_id]}' }
+
+  /v1/privacy:sweepOverdue:
+    post:
+      operationId: sweepOverdue
+      summary: 'Scheduler: flag erasures whose acknowledgements are past 7 days.'
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200': { description: '{overdue: [request_id]}' }
+
+  /healthz:
+    get:
+      operationId: healthz
+      summary: Liveness probe.
+      security: []
+      responses:
+        '200': { description: Alive. }
+  /readyz:
+    get:
+      operationId: readyz
+      summary: Readiness probe (database reachable).
+      security: []
+      responses:
+        '200': { description: Ready. }
+        '503': { $ref: '#/components/responses/Problem' }
+
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+
+  parameters:
+    TenantId:
+      name: tenant_id
+      in: query
+      required: false
+      description: Platform principals only; tenant users act on their own tenant.
+      schema: { type: string, format: uuid }
+    CandidateId:
+      { name: candidateId, in: path, required: true, schema: { type: string, format: uuid } }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, pattern: '^[A-Za-z0-9_.:-]{8,128}$' }
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      schema: { type: string }
+
+  responses:
+    Problem:
+      description: RFC 9457 problem document.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    CandidateWithETag:
+      description: The candidate.
+      headers:
+        ETag: { schema: { type: string } }
+        Cache-Control: { schema: { type: string } }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Candidate' }
+    PrivacyRequest:
+      description: The privacy request.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/PrivacyRequest' }
+
+  schemas:
+    Pii:
+      type: object
+      required: [full_name]
+      properties:
+        full_name: { type: string, maxLength: 200 }
+        email: { type: [string, 'null'], format: email }
+        phone: { type: [string, 'null'] }
+        address: { type: [string, 'null'], maxLength: 500 }
+        dob: { type: [string, 'null'], format: date }
+
+    CandidateAttributes:
+      type: object
+      properties:
+        user_id: { type: [string, 'null'], format: uuid }
+        external_ref: { type: [string, 'null'] }
+        current_title: { type: [string, 'null'] }
+        job_profile_id: { type: [string, 'null'], format: uuid }
+        department: { type: [string, 'null'] }
+        location_country: { type: [string, 'null'], pattern: '^[A-Za-z]{2}$' }
+        total_experience_months: { type: [integer, 'null'], minimum: 0, maximum: 900 }
+        marketplace_opt_in: { type: boolean }
+        consent: { type: object, description: Must not contain PII. }
+
+    CreateCandidateRequest:
+      allOf:
+        - $ref: '#/components/schemas/CandidateAttributes'
+        - type: object
+          required: [source, pii]
+          properties:
+            tenant_id: { type: string, format: uuid }
+            source:
+              {
+                type: string,
+                enum: [external_applicant, employee, referral, sourced, rediscovered],
+              }
+            pii: { $ref: '#/components/schemas/Pii' }
+
+    PatchCandidateRequest:
+      allOf:
+        - $ref: '#/components/schemas/CandidateAttributes'
+        - type: object
+          properties:
+            pii: { type: object, description: Partial PII; omitted fields keep their value. }
+            legal_hold: { type: boolean, description: tenant_admin only. }
+
+    Candidate:
+      type: object
+      properties:
+        candidate_id: { type: string, format: uuid }
+        tenant_id: { type: string, format: uuid }
+        source: { type: string }
+        pii:
+          oneOf:
+            - $ref: '#/components/schemas/Pii'
+            - type: 'null'
+        pii_redacted: { type: boolean }
+        profile: { type: object, description: Redacted parsed profile (no PII). }
+        legal_hold: { type: boolean }
+        version: { type: integer }
+
+    EvidenceInput:
+      type: object
+      required: [skill_id, source, proficiency]
+      properties:
+        skill_id: { type: string, format: uuid }
+        source:
+          type: string
+          enum:
+            [
+              assessment,
+              certification,
+              manager,
+              ai_interview,
+              multi_rater,
+              project_inference,
+              resume_inference,
+              learning_completion,
+              self,
+            ]
+        proficiency: { type: number, minimum: 0, maximum: 5 }
+        confidence: { type: number, minimum: 0, maximum: 1, default: 1 }
+        source_ref: { type: [string, 'null'], format: uuid }
+        reason: { type: [string, 'null'], maxLength: 500, description: Required for self. }
+        observed_at: { type: string, format: date-time }
+        valid_until: { type: [string, 'null'], format: date-time }
+
+    CurrentSkill:
+      type: object
+      properties:
+        skill_id: { type: string, format: uuid }
+        proficiency: { type: number }
+        is_validated: { type: boolean }
+        calibration_needed: { type: boolean }
+        evidence_count: { type: integer }
+        computed_at: { type: string, format: date-time }
+
+    PrivacyRequest:
+      type: object
+      properties:
+        request_id: { type: string, format: uuid }
+        candidate_id: { type: string, format: uuid }
+        type: { type: string, enum: [access, erasure] }
+        status: { type: string, enum: [completed, awaiting_acks, overdue] }
+        ack_required_from: { type: array, items: { type: string } }
+        acks: { type: array, items: { type: object } }
+        certificate: { type: [object, 'null'] }
+        export: { type: object, description: Access requests only. }
+
+    Problem:
+      type: object
+      required: [type, title, status, detail, instance, code]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        code:
+          type: string
+          examples:
+            [
+              CANDIDATE_NOT_FOUND,
+              CANDIDATE_EMAIL_TAKEN,
+              PII_IN_PROFILE,
+              DOCUMENT_DUPLICATE,
+              DOCUMENT_TOO_LARGE,
+              UNSUPPORTED_MIME_TYPE,
+              SOURCE_NOT_ALLOWED,
+              REASON_REQUIRED,
+              SKILL_NOT_FOUND,
+              LEGAL_HOLD,
+              TENANT_ID_REQUIRED,
+              TAXONOMY_UNAVAILABLE,
+            ]
+        candidate_id: { type: string, format: uuid }
+        document_id: { type: string, format: uuid }

@@ -1,0 +1,71 @@
+{
+  "id": "G06",
+  "format": "pdf2col",
+  "contact": {
+    "full_name": "Greta Castellanos",
+    "email": "greta.castellanos6@mailbox.example",
+    "phone": "+31 6 6679 1914"
+  },
+  "location": "Tampere, Finland",
+  "summary": "Data Engineer with experience in Kubernetes, Pandas, PostgreSQL.",
+  "work_history": [
+    {
+      "title": "Data Engineer",
+      "employer": "Granite Peak Retail",
+      "start": "2023-01",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Designed data models with Kubernetes and Pandas",
+        "Maintained batch jobs using PostgreSQL"
+      ],
+      "skills": [
+        "Kubernetes",
+        "Pandas",
+        "PostgreSQL"
+      ]
+    },
+    {
+      "title": "Data Engineer",
+      "employer": "Cobalt Harbor Insurance",
+      "start": "2021-10",
+      "end": "2023-02",
+      "is_current": false,
+      "responsibilities": [
+        "Maintained event pipelines with React and Python",
+        "Maintained batch jobs using Go"
+      ],
+      "skills": [
+        "React",
+        "Python",
+        "Go"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Westmarch University",
+      "degree": "BEng",
+      "field": "Software Engineering",
+      "end_year": 2020
+    }
+  ],
+  "certifications": [],
+  "skills": [
+    "Kubernetes",
+    "Pandas",
+    "PostgreSQL",
+    "React",
+    "Python",
+    "Go",
+    "SQL",
+    "Kafka",
+    "Java"
+  ],
+  "skills_line_extra": [
+    "SQL",
+    "Kafka",
+    "Java"
+  ],
+  "file": "G06.pdf"
+}

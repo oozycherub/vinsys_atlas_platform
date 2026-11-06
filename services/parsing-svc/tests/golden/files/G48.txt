@@ -1,0 +1,20 @@
+Xenia Quintanilla
+xenia.quintanilla48@mailbox.example | +31 6 5389 5564 | Tampere, Finland
+Ref: G48
+Summary
+Software Engineer with experience in Elasticsearch, Kafka, AWS.
+Experience
+Software Engineer - Northwind Systems
+Jan 2024 - Present
+* Migrated event pipelines with Elasticsearch and Kafka
+* Migrated customer APIs using AWS
+Backend Engineer - Orbitfield Labs
+Feb 2022 - Jul 2024
+* Migrated reporting services with Python and Snowflake
+* Maintained event pipelines using dbt
+Education
+BSc in Computer Science, Northgate College of Engineering, 2022
+Skills
+Elasticsearch, Kafka, AWS, Python
+Snowflake, dbt, Kubernetes, Spark
+PyTorch

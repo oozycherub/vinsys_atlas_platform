@@ -1,0 +1,96 @@
+{
+  "id": "G28",
+  "format": "txt",
+  "contact": {
+    "full_name": "Dario Quintanilla",
+    "email": "dario.quintanilla28@mailbox.example",
+    "phone": "+31 6 8579 7448"
+  },
+  "location": "Rotterdam, Netherlands",
+  "summary": "Software Engineer with experience in Go, GraphQL, Java.",
+  "work_history": [
+    {
+      "title": "Software Engineer",
+      "employer": "Copperleaf Health",
+      "start": "2024-08",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Built event pipelines with Go and GraphQL",
+        "Built batch jobs using Java"
+      ],
+      "skills": [
+        "Go",
+        "GraphQL",
+        "Java"
+      ]
+    },
+    {
+      "title": "Senior Data Engineer",
+      "employer": "Ironbark Robotics",
+      "start": "2020-11",
+      "end": "2024-02",
+      "is_current": false,
+      "responsibilities": [
+        "Scaled event pipelines with Kubernetes and Elasticsearch",
+        "Maintained event pipelines using Kafka"
+      ],
+      "skills": [
+        "Kubernetes",
+        "Elasticsearch",
+        "Kafka"
+      ]
+    },
+    {
+      "title": "Platform Engineer",
+      "employer": "Quarry Lane Software",
+      "start": "2018-06",
+      "end": "2020-10",
+      "is_current": false,
+      "responsibilities": [
+        "Built deployment tooling with Pandas and AWS",
+        "Migrated data models using dbt"
+      ],
+      "skills": [
+        "Pandas",
+        "AWS",
+        "dbt"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Northgate College of Engineering",
+      "degree": "BSc",
+      "field": "Computer Science",
+      "end_year": 2016
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "AWS Certified Solutions Architect",
+      "issuer": "Amazon Web Services",
+      "issued": "2024-03"
+    }
+  ],
+  "skills": [
+    "Go",
+    "GraphQL",
+    "Java",
+    "Kubernetes",
+    "Elasticsearch",
+    "Kafka",
+    "Pandas",
+    "AWS",
+    "dbt",
+    "React",
+    "Scala",
+    "SQL"
+  ],
+  "skills_line_extra": [
+    "React",
+    "Scala",
+    "SQL"
+  ],
+  "file": "G28.txt"
+}

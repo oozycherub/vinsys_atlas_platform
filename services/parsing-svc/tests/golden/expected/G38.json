@@ -1,0 +1,96 @@
+{
+  "id": "G38",
+  "format": "txt",
+  "contact": {
+    "full_name": "Nadim Grimaldo",
+    "email": "nadim.grimaldo38@mailbox.example",
+    "phone": "+31 6 2851 2166"
+  },
+  "location": "Leeds, United Kingdom",
+  "summary": "Site Reliability Engineer with experience in Go, Snowflake, SQL.",
+  "work_history": [
+    {
+      "title": "Site Reliability Engineer",
+      "employer": "Quarry Lane Software",
+      "start": "2024-02",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Scaled customer APIs with Go and Snowflake",
+        "Designed event pipelines using SQL"
+      ],
+      "skills": [
+        "Go",
+        "Snowflake",
+        "SQL"
+      ]
+    },
+    {
+      "title": "Senior Data Engineer",
+      "employer": "Silverline Payments",
+      "start": "2022-10",
+      "end": "2024-05",
+      "is_current": false,
+      "responsibilities": [
+        "Migrated batch jobs with AWS and Spark",
+        "Scaled data models using Scala"
+      ],
+      "skills": [
+        "AWS",
+        "Spark",
+        "Scala"
+      ]
+    },
+    {
+      "title": "Senior Data Engineer",
+      "employer": "Northwind Systems",
+      "start": "2018-08",
+      "end": "2022-06",
+      "is_current": false,
+      "responsibilities": [
+        "Designed data models with GraphQL and Elasticsearch",
+        "Migrated reporting services using React"
+      ],
+      "skills": [
+        "GraphQL",
+        "Elasticsearch",
+        "React"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Northgate College of Engineering",
+      "degree": "BEng",
+      "field": "Software Engineering",
+      "end_year": 2018
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Google Professional Data Engineer",
+      "issuer": "Google Cloud",
+      "issued": "2024-08"
+    }
+  ],
+  "skills": [
+    "Go",
+    "Snowflake",
+    "SQL",
+    "AWS",
+    "Spark",
+    "Scala",
+    "GraphQL",
+    "Elasticsearch",
+    "React",
+    "Airflow",
+    "Redis",
+    "dbt"
+  ],
+  "skills_line_extra": [
+    "Airflow",
+    "Redis",
+    "dbt"
+  ],
+  "file": "G38.txt"
+}

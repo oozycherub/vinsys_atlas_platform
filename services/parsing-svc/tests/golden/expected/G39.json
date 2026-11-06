@@ -1,0 +1,71 @@
+{
+  "id": "G39",
+  "format": "pdf",
+  "contact": {
+    "full_name": "Odile Nyberg",
+    "email": "odile.nyberg39@mailbox.example",
+    "phone": "+31 6 4057 4112"
+  },
+  "location": "Aarhus, Denmark",
+  "summary": "Backend Engineer with experience in Java, Spark, dbt.",
+  "work_history": [
+    {
+      "title": "Backend Engineer",
+      "employer": "Tidewater Logistics",
+      "start": "2024-04",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Built reporting services with Java and Spark",
+        "Built event pipelines using dbt"
+      ],
+      "skills": [
+        "Java",
+        "Spark",
+        "dbt"
+      ]
+    },
+    {
+      "title": "Platform Engineer",
+      "employer": "Meadowbrook Energy",
+      "start": "2021-11",
+      "end": "2024-01",
+      "is_current": false,
+      "responsibilities": [
+        "Scaled batch jobs with Grafana and PyTorch",
+        "Built batch jobs using Go"
+      ],
+      "skills": [
+        "Grafana",
+        "PyTorch",
+        "Go"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Ashford Technical University",
+      "degree": "MSc",
+      "field": "Applied Mathematics",
+      "end_year": 2020
+    }
+  ],
+  "certifications": [],
+  "skills": [
+    "Java",
+    "Spark",
+    "dbt",
+    "Grafana",
+    "PyTorch",
+    "Go",
+    "GraphQL",
+    "Airflow",
+    "React"
+  ],
+  "skills_line_extra": [
+    "GraphQL",
+    "Airflow",
+    "React"
+  ],
+  "file": "G39.pdf"
+}

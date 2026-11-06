@@ -1,0 +1,6 @@
+apiVersion: v2
+name: atlas-sandbox
+description: sandbox-svc API, judge workers (gVisor, one Deployment per language), KEDA autoscaling and network isolation (brick 9, PRD §2.2).
+type: application
+version: 1.0.0
+appVersion: '1.0.0'

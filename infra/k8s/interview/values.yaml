@@ -1,0 +1,42 @@
+# Images are referenced by digest only (the release pipeline fills these in).
+registry: registry.atlas.internal/atlas
+api:
+  image: interview-svc@sha256:0000000000000000000000000000000000000000000000000000000000000000
+  replicas: 3
+  port: 8091
+  resources: { requests: { cpu: 500m, memory: 512Mi }, limits: { memory: 1Gi } }
+
+agent:
+  # The same image with the `voice` extras; one process runs `capacity` sessions (about
+  # 0.3 vCPU each, PRD §2.4d) and shares the node's GPU for faster-whisper.
+  image: interview-agent@sha256:0000000000000000000000000000000000000000000000000000000000000000
+  capacity: 8
+  resources:
+    requests: { cpu: '3', memory: 8Gi, nvidia.com/gpu: 1 }
+    limits: { memory: 12Gi, nvidia.com/gpu: 1 }
+  keda:
+    pendingPerWorker: 8 # sessions waiting for an agent (plus expected demand) per worker
+    minReplicas: 1
+    maxReplicas: 250 # 2k concurrent interviews per cell (PRD §2.4 NFR) at 8 per worker
+    pollingInterval: 5
+    cooldownPeriod: 600 # agents hold live interviews: scale in slowly
+
+livekit:
+  image: livekit/livekit-server:v1.9.1
+  replicas: 3
+
+urls:
+  livekit: wss://rtc.atlas.dev
+  ws: wss://api.atlas.dev
+  gateway: http://llm-gateway.atlas-ai.svc.cluster.local:8085
+  taxonomy: http://taxonomy-svc.atlas-core.svc.cluster.local:8083
+  tenant: http://tenant-svc.atlas-core.svc.cluster.local:8081
+  tts: http://tts.atlas-ai.svc.cluster.local:8000/v1/synthesize
+
+secrets:
+  database: interview-db
+  auth: platform-auth
+  client: interview-client
+  livekit: livekit-keys
+  objectStorage: interview-recordings
+  redis: interview-redis

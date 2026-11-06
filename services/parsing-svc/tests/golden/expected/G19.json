@@ -1,0 +1,77 @@
+{
+  "id": "G19",
+  "format": "pdf",
+  "contact": {
+    "full_name": "Tobias Nyberg",
+    "email": "tobias.nyberg19@mailbox.example",
+    "phone": "+31 6 1561 6440"
+  },
+  "location": "Valencia, Spain",
+  "summary": "Software Engineer with experience in React, PyTorch, GraphQL.",
+  "work_history": [
+    {
+      "title": "Software Engineer",
+      "employer": "Silverline Payments",
+      "start": "2024-04",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Maintained customer APIs with React and PyTorch",
+        "Migrated deployment tooling using GraphQL"
+      ],
+      "skills": [
+        "React",
+        "PyTorch",
+        "GraphQL"
+      ]
+    },
+    {
+      "title": "Data Engineer",
+      "employer": "Northwind Systems",
+      "start": "2021-04",
+      "end": "2024-05",
+      "is_current": false,
+      "responsibilities": [
+        "Designed customer APIs with Spark and Go",
+        "Maintained customer APIs using TypeScript"
+      ],
+      "skills": [
+        "Spark",
+        "Go",
+        "TypeScript"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Ashford Technical University",
+      "degree": "MSc",
+      "field": "Applied Mathematics",
+      "end_year": 2020
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Terraform Associate",
+      "issuer": "HashiCorp",
+      "issued": "2024-03"
+    }
+  ],
+  "skills": [
+    "React",
+    "PyTorch",
+    "GraphQL",
+    "Spark",
+    "Go",
+    "TypeScript",
+    "Elasticsearch",
+    "SQL",
+    "Airflow"
+  ],
+  "skills_line_extra": [
+    "Elasticsearch",
+    "SQL",
+    "Airflow"
+  ],
+  "file": "G19.pdf"
+}

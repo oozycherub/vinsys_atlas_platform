@@ -1,0 +1,71 @@
+{
+  "id": "G48",
+  "format": "txt",
+  "contact": {
+    "full_name": "Xenia Quintanilla",
+    "email": "xenia.quintanilla48@mailbox.example",
+    "phone": "+31 6 5389 5564"
+  },
+  "location": "Tampere, Finland",
+  "summary": "Software Engineer with experience in Elasticsearch, Kafka, AWS.",
+  "work_history": [
+    {
+      "title": "Software Engineer",
+      "employer": "Northwind Systems",
+      "start": "2024-01",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Migrated event pipelines with Elasticsearch and Kafka",
+        "Migrated customer APIs using AWS"
+      ],
+      "skills": [
+        "Elasticsearch",
+        "Kafka",
+        "AWS"
+      ]
+    },
+    {
+      "title": "Backend Engineer",
+      "employer": "Orbitfield Labs",
+      "start": "2022-02",
+      "end": "2024-07",
+      "is_current": false,
+      "responsibilities": [
+        "Migrated reporting services with Python and Snowflake",
+        "Maintained event pipelines using dbt"
+      ],
+      "skills": [
+        "Python",
+        "Snowflake",
+        "dbt"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Northgate College of Engineering",
+      "degree": "BSc",
+      "field": "Computer Science",
+      "end_year": 2022
+    }
+  ],
+  "certifications": [],
+  "skills": [
+    "Elasticsearch",
+    "Kafka",
+    "AWS",
+    "Python",
+    "Snowflake",
+    "dbt",
+    "Kubernetes",
+    "Spark",
+    "PyTorch"
+  ],
+  "skills_line_extra": [
+    "Kubernetes",
+    "Spark",
+    "PyTorch"
+  ],
+  "file": "G48.txt"
+}

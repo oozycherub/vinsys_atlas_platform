@@ -1,0 +1,25 @@
+# Judge workers need isolate's privileges (namespaces, cgroups) inside the gVisor sandbox, so the
+# namespace is "privileged" for Pod Security; gVisor (RuntimeClass) is what contains them, and
+# nodes in the tainted sandbox pool run nothing else.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: atlas-sandbox
+  labels:
+    pod-security.kubernetes.io/enforce: privileged
+    pod-security.kubernetes.io/warn: restricted
+    atlas.dev/zone: sandbox
+---
+# Layer 1: gVisor (runsc) intercepts every syscall in a user-space kernel. Pods without this
+# RuntimeClass cannot schedule on sandbox nodes (the node pool is tainted and only this class
+# tolerates the taint through its scheduling block).
+apiVersion: node.k8s.io/v1
+kind: RuntimeClass
+metadata:
+  name: gvisor
+handler: runsc
+scheduling:
+  nodeSelector:
+    atlas.dev/pool: sandbox
+  tolerations:
+    - { key: atlas.dev/sandbox, operator: Exists, effect: NoSchedule }

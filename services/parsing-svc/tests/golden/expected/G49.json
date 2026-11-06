@@ -1,0 +1,77 @@
+{
+  "id": "G49",
+  "format": "pdf",
+  "contact": {
+    "full_name": "Yusuf Dovrat",
+    "email": "yusuf.dovrat49@mailbox.example",
+    "phone": "+31 6 8408 2021"
+  },
+  "location": "Rotterdam, Netherlands",
+  "summary": "Backend Engineer with experience in GraphQL, Terraform, Pandas.",
+  "work_history": [
+    {
+      "title": "Backend Engineer",
+      "employer": "Bluefjord Analytics",
+      "start": "2023-06",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Built event pipelines with GraphQL and Terraform",
+        "Built event pipelines using Pandas"
+      ],
+      "skills": [
+        "GraphQL",
+        "Terraform",
+        "Pandas"
+      ]
+    },
+    {
+      "title": "Analytics Engineer",
+      "employer": "Granite Peak Retail",
+      "start": "2020-02",
+      "end": "2023-04",
+      "is_current": false,
+      "responsibilities": [
+        "Scaled data models with Kubernetes and Python",
+        "Automated data models using Java"
+      ],
+      "skills": [
+        "Kubernetes",
+        "Python",
+        "Java"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Ashford Technical University",
+      "degree": "MSc",
+      "field": "Data Science",
+      "end_year": 2018
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Certified Kubernetes Administrator",
+      "issuer": "CNCF",
+      "issued": "2024-08"
+    }
+  ],
+  "skills": [
+    "GraphQL",
+    "Terraform",
+    "Pandas",
+    "Kubernetes",
+    "Python",
+    "Java",
+    "Kafka",
+    "React",
+    "Airflow"
+  ],
+  "skills_line_extra": [
+    "Kafka",
+    "React",
+    "Airflow"
+  ],
+  "file": "G49.pdf"
+}

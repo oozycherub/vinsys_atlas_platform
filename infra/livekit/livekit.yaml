@@ -1,0 +1,45 @@
+# LiveKit SFU for AI interviews (brick 11, PRD §2.4b media path). Secrets come from the
+# environment (LIVEKIT_KEYS="<api key>: <api secret>", LIVEKIT_REDIS_PASSWORD); nothing secret here.
+port: 7880
+bind_addresses: ['0.0.0.0']
+log_level: info
+
+rtc:
+  # Media over UDP (ICE), with TCP and TURN/TLS fallbacks for restrictive candidate networks.
+  udp_port: 7882
+  tcp_port: 7881
+  use_external_ip: true
+  # ICE restarts on network drops (PRD §2.4d); the agent pauses the interview when the
+  # candidate's track ends and resumes it on rejoin.
+
+turn:
+  enabled: true
+  domain: turn.atlas.dev
+  tls_port: 5349
+  udp_port: 3478
+  external_tls: true
+
+redis:
+  # Multi-node routing: rooms are pinned to nodes; Redis holds room → node.
+  address: redis.atlas-data:6379
+  use_tls: true
+
+room:
+  # One room per interview session (`iv_{sid}`), created on demand by the first join.
+  auto_create: true
+  empty_timeout: 300 # s: the PAUSED window (120 s × 2) fits inside it
+  departure_timeout: 20
+  max_participants: 3 # candidate, agent, and an optional live observer
+  enabled_codecs:
+    - mime: audio/opus # Opus 48 kHz, DTLS-SRTP (PRD §2.4b)
+  # No video unless proctoring is on: candidate tokens grant microphone publish only.
+
+audio:
+  active_level: 35
+  min_percentile: 40
+  update_interval: 400
+
+limit:
+  num_tracks: 4
+  bytes_per_sec: 1_000_000
+  subscription_limit_audio: 4

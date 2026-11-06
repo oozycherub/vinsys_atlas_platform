@@ -1,0 +1,77 @@
+{
+  "id": "G04",
+  "format": "pdf",
+  "contact": {
+    "full_name": "Elif Ivanescu",
+    "email": "elif.ivanescu4@mailbox.example",
+    "phone": "+31 6 7899 2742"
+  },
+  "location": "Aarhus, Denmark",
+  "summary": "Backend Engineer with experience in Scala, SQL, Grafana.",
+  "work_history": [
+    {
+      "title": "Backend Engineer",
+      "employer": "Copperleaf Health",
+      "start": "2024-06",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Automated deployment tooling with Scala and SQL",
+        "Built data models using Grafana"
+      ],
+      "skills": [
+        "Scala",
+        "SQL",
+        "Grafana"
+      ]
+    },
+    {
+      "title": "Backend Engineer",
+      "employer": "Ironbark Robotics",
+      "start": "2022-12",
+      "end": "2024-01",
+      "is_current": false,
+      "responsibilities": [
+        "Built data models with dbt and Python",
+        "Maintained customer APIs using Linux"
+      ],
+      "skills": [
+        "dbt",
+        "Python",
+        "Linux"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Ashford Technical University",
+      "degree": "BSc",
+      "field": "Computer Science",
+      "end_year": 2021
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "AWS Certified Solutions Architect",
+      "issuer": "Amazon Web Services",
+      "issued": "2024-02"
+    }
+  ],
+  "skills": [
+    "Scala",
+    "SQL",
+    "Grafana",
+    "dbt",
+    "Python",
+    "Linux",
+    "Java",
+    "Kafka",
+    "Kubernetes"
+  ],
+  "skills_line_extra": [
+    "Java",
+    "Kafka",
+    "Kubernetes"
+  ],
+  "file": "G04.pdf"
+}

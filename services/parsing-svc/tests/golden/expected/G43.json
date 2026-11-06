@@ -1,0 +1,96 @@
+{
+  "id": "G43",
+  "format": "txt",
+  "contact": {
+    "full_name": "Selin Brannigan",
+    "email": "selin.brannigan43@mailbox.example",
+    "phone": "+31 6 6958 6284"
+  },
+  "location": "Porto, Portugal",
+  "summary": "Platform Engineer with experience in Docker, SQL, PostgreSQL.",
+  "work_history": [
+    {
+      "title": "Platform Engineer",
+      "employer": "Silverline Payments",
+      "start": "2024-11",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Scaled reporting services with Docker and SQL",
+        "Scaled reporting services using PostgreSQL"
+      ],
+      "skills": [
+        "Docker",
+        "SQL",
+        "PostgreSQL"
+      ]
+    },
+    {
+      "title": "Analytics Engineer",
+      "employer": "Northwind Systems",
+      "start": "2021-12",
+      "end": "2024-05",
+      "is_current": false,
+      "responsibilities": [
+        "Maintained batch jobs with Java and Spark",
+        "Designed batch jobs using Snowflake"
+      ],
+      "skills": [
+        "Java",
+        "Spark",
+        "Snowflake"
+      ]
+    },
+    {
+      "title": "Machine Learning Engineer",
+      "employer": "Orbitfield Labs",
+      "start": "2017-05",
+      "end": "2021-11",
+      "is_current": false,
+      "responsibilities": [
+        "Built data models with React and Kubernetes",
+        "Built batch jobs using Kafka"
+      ],
+      "skills": [
+        "React",
+        "Kubernetes",
+        "Kafka"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Northgate College of Engineering",
+      "degree": "MSc",
+      "field": "Applied Mathematics",
+      "end_year": 2017
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Terraform Associate",
+      "issuer": "HashiCorp",
+      "issued": "2024-04"
+    }
+  ],
+  "skills": [
+    "Docker",
+    "SQL",
+    "PostgreSQL",
+    "Java",
+    "Spark",
+    "Snowflake",
+    "React",
+    "Kubernetes",
+    "Kafka",
+    "PyTorch",
+    "Go",
+    "Python"
+  ],
+  "skills_line_extra": [
+    "PyTorch",
+    "Go",
+    "Python"
+  ],
+  "file": "G43.txt"
+}

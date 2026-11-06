@@ -1,0 +1,71 @@
+{
+  "id": "G18",
+  "format": "txt",
+  "contact": {
+    "full_name": "Selin Grimaldo",
+    "email": "selin.grimaldo18@mailbox.example",
+    "phone": "+31 6 7454 7465"
+  },
+  "location": "Aarhus, Denmark",
+  "summary": "Backend Engineer with experience in Pandas, PostgreSQL, Docker.",
+  "work_history": [
+    {
+      "title": "Backend Engineer",
+      "employer": "Granite Peak Retail",
+      "start": "2022-04",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Automated batch jobs with Pandas and PostgreSQL",
+        "Scaled customer APIs using Docker"
+      ],
+      "skills": [
+        "Pandas",
+        "PostgreSQL",
+        "Docker"
+      ]
+    },
+    {
+      "title": "Backend Engineer",
+      "employer": "Cobalt Harbor Insurance",
+      "start": "2020-02",
+      "end": "2022-12",
+      "is_current": false,
+      "responsibilities": [
+        "Automated customer APIs with React and Scala",
+        "Built data models using dbt"
+      ],
+      "skills": [
+        "React",
+        "Scala",
+        "dbt"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Northgate College of Engineering",
+      "degree": "BEng",
+      "field": "Software Engineering",
+      "end_year": 2019
+    }
+  ],
+  "certifications": [],
+  "skills": [
+    "Pandas",
+    "PostgreSQL",
+    "Docker",
+    "React",
+    "Scala",
+    "dbt",
+    "GraphQL",
+    "Airflow",
+    "Redis"
+  ],
+  "skills_line_extra": [
+    "GraphQL",
+    "Airflow",
+    "Redis"
+  ],
+  "file": "G18.txt"
+}

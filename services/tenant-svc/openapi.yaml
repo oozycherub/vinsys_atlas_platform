@@ -1,0 +1,534 @@
+openapi: 3.1.0
+info:
+  title: Atlas tenant-svc
+  version: 1.0.0
+  license: { name: Proprietary, identifier: LicenseRef-Proprietary }
+  description: >
+    Tenant directory and lifecycle (docs/prompts/01-tenant-svc.md). All errors are
+    RFC 9457 problem documents. Custom methods follow AIP-136 (`/{id}:verb`).
+servers:
+  - url: http://localhost:8081
+security:
+  - bearer: []
+
+paths:
+  /v1/tenants:
+    post:
+      operationId: createTenant
+      summary: 'Create a tenant (status provisioning). Roles: super_admin.'
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateTenantRequest' }
+      responses:
+        '201':
+          description: Created (or replayed, with Idempotent-Replayed true).
+          headers:
+            ETag: { $ref: '#/components/headers/ETag' }
+            Location: { schema: { type: string } }
+            Idempotent-Replayed: { schema: { type: string, enum: ['true'] } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tenant' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+    get:
+      operationId: listTenants
+      summary: 'List tenants newest first. Roles: super_admin.'
+      parameters:
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/TenantStatus' } }
+        - { name: data_region, in: query, schema: { type: string } }
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 100, default: 20 },
+          }
+        - { name: cursor, in: query, schema: { type: string } }
+      responses:
+        '200':
+          description: One page.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [items, next_cursor]
+                properties:
+                  items: { type: array, items: { $ref: '#/components/schemas/Tenant' } }
+                  next_cursor: { type: [string, 'null'] }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+
+  /v1/tenants/{tenantId}:
+    parameters:
+      - $ref: '#/components/parameters/TenantId'
+    get:
+      operationId: getTenant
+      summary: 'Read one tenant. Roles: super_admin, tenant_admin (own tenant; others get 404).'
+      responses:
+        '200':
+          description: OK
+          headers: { ETag: { $ref: '#/components/headers/ETag' } }
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Tenant' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: renameTenant
+      summary: 'Change display_name. Roles: super_admin, tenant_admin (own).'
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [display_name]
+              properties:
+                display_name: { type: string, minLength: 1, maxLength: 200 }
+      responses:
+        '200': { $ref: '#/components/responses/TenantWithETag' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '412': { $ref: '#/components/responses/Problem' }
+        '428': { $ref: '#/components/responses/Problem' }
+
+  /v1/tenants/{tenantId}/settings:
+    parameters:
+      - $ref: '#/components/parameters/TenantId'
+    get:
+      operationId: getTenantSettingsForService
+      summary: 'Settings for platform services (matching weights, limits). Roles: service with tenant-settings:read.'
+      responses:
+        '200':
+          description: The settings and the tenant version they belong to.
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [tenant_id, version, settings]
+                properties:
+                  tenant_id: { type: string, format: uuid }
+                  version: { type: integer }
+                  settings: { $ref: '#/components/schemas/TenantSettings' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    put:
+      operationId: replaceTenantSettings
+      summary: 'Replace settings. Roles: super_admin, tenant_admin (own). Emits tenant.tenant.settings_updated.v1.'
+      description: Tenant admins may resend `limits` and `features` unchanged but not alter them (403 PLATFORM_MANAGED_SETTING).
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/TenantSettings' }
+      responses:
+        '200': { $ref: '#/components/responses/TenantWithETag' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '412': { $ref: '#/components/responses/Problem' }
+        '428': { $ref: '#/components/responses/Problem' }
+
+  /v1/tenants/{tenantId}/data-keys:
+    get:
+      operationId: getTenantDataKeys
+      summary: 'Wrapped DEK versions for encrypting services. Role service, scope tenant-keys:read.'
+      description: >
+        Callers unwrap with their own KMS access (encryption context purpose=tenant-dek). Purged
+        tenants have no keys (404). Responses are never cached.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200':
+          description: Live key versions, newest first.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tenant_id: { type: string, format: uuid }
+                  keys:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        dek_version: { type: integer }
+                        kms_key_ref: { type: string }
+                        wrapped_key: { type: string, contentEncoding: base64 }
+                        active: { type: boolean }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /v1/tenants/{tenantId}/retention-policy:
+    parameters:
+      - $ref: '#/components/parameters/TenantId'
+    put:
+      operationId: replaceRetentionPolicy
+      summary: 'Replace the retention policy. Roles: super_admin.'
+      parameters:
+        - $ref: '#/components/parameters/IfMatch'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/RetentionPolicy' }
+      responses:
+        '200': { $ref: '#/components/responses/TenantWithETag' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '412': { $ref: '#/components/responses/Problem' }
+        '428': { $ref: '#/components/responses/Problem' }
+
+  /v1/tenants/{tenantId}:activate:
+    $ref: '#/components/pathItems/activate'
+  /v1/tenants/{tenantId}:suspend:
+    $ref: '#/components/pathItems/suspend'
+  /v1/tenants/{tenantId}:reactivate:
+    $ref: '#/components/pathItems/reactivate'
+  /v1/tenants/{tenantId}:offboard:
+    $ref: '#/components/pathItems/offboard'
+  /v1/tenants/{tenantId}:purge:
+    $ref: '#/components/pathItems/purge'
+  /v1/tenants/{tenantId}:rotateDataKey:
+    $ref: '#/components/pathItems/rotateDataKey'
+
+  /v1/tenant-directory:resolve:
+    get:
+      operationId: resolveTenant
+      summary: Resolve a slug to its cell. Role service + scope tenant-directory:read (API gateway).
+      parameters:
+        - { name: slug, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: Directory entry.
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DirectoryEntry' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /healthz:
+    get:
+      operationId: liveness
+      summary: Liveness probe (no auth).
+      security: []
+      responses: { '200': { description: Process is alive. } }
+  /readyz:
+    get:
+      operationId: readiness
+      summary: Readiness probe; 503 when the database is unreachable.
+      security: []
+      responses:
+        '200': { description: Database reachable. }
+        '503': { $ref: '#/components/responses/Problem' }
+
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+
+  parameters:
+    TenantId: { name: tenantId, in: path, required: true, schema: { type: string, format: uuid } }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema: { type: string, pattern: '^[A-Za-z0-9_.:-]{8,128}$' }
+    IfMatch:
+      name: If-Match
+      in: header
+      required: true
+      description: ETag from the last read, e.g. "3". Missing → 428, stale → 412.
+      schema: { type: string }
+    IfMatchOptional:
+      name: If-Match
+      in: header
+      required: false
+      description: Optional ETag from the last read. When sent and stale → 412, so a retried call cannot apply twice.
+      schema: { type: string }
+
+  headers:
+    ETag: { description: 'Tenant version, e.g. "3"', schema: { type: string } }
+
+  responses:
+    Problem:
+      description: RFC 9457 problem document.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    TenantWithETag:
+      description: Updated tenant.
+      headers: { ETag: { $ref: '#/components/headers/ETag' } }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Tenant' }
+
+  pathItems:
+    activate:
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/IfMatchOptional'
+      post:
+        operationId: activateTenant
+        summary: 'provisioning → active. Roles: super_admin.'
+        requestBody: { $ref: '#/components/requestBodies/Lifecycle' }
+        responses:
+          '200': { $ref: '#/components/responses/TenantWithETag' }
+          '400': { $ref: '#/components/responses/Problem' }
+          '403': { $ref: '#/components/responses/Problem' }
+          '404': { $ref: '#/components/responses/Problem' }
+          '412': { $ref: '#/components/responses/Problem' }
+          '422': { $ref: '#/components/responses/Problem' }
+    suspend:
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/IfMatchOptional'
+      post:
+        operationId: suspendTenant
+        summary: 'active → suspended; reason required. Roles: super_admin.'
+        requestBody: { $ref: '#/components/requestBodies/Lifecycle' }
+        responses:
+          '200': { $ref: '#/components/responses/TenantWithETag' }
+          '400': { $ref: '#/components/responses/Problem' }
+          '403': { $ref: '#/components/responses/Problem' }
+          '404': { $ref: '#/components/responses/Problem' }
+          '412': { $ref: '#/components/responses/Problem' }
+          '422': { $ref: '#/components/responses/Problem' }
+    reactivate:
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/IfMatchOptional'
+      post:
+        operationId: reactivateTenant
+        summary: 'suspended → active. Roles: super_admin.'
+        requestBody: { $ref: '#/components/requestBodies/Lifecycle' }
+        responses:
+          '200': { $ref: '#/components/responses/TenantWithETag' }
+          '400': { $ref: '#/components/responses/Problem' }
+          '403': { $ref: '#/components/responses/Problem' }
+          '404': { $ref: '#/components/responses/Problem' }
+          '412': { $ref: '#/components/responses/Problem' }
+          '422': { $ref: '#/components/responses/Problem' }
+    offboard:
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/IfMatchOptional'
+      post:
+        operationId: offboardTenant
+        summary: 'active|suspended → offboarding; reason required; sets purge_not_before. Roles: super_admin.'
+        requestBody: { $ref: '#/components/requestBodies/Lifecycle' }
+        responses:
+          '200': { $ref: '#/components/responses/TenantWithETag' }
+          '400': { $ref: '#/components/responses/Problem' }
+          '403': { $ref: '#/components/responses/Problem' }
+          '404': { $ref: '#/components/responses/Problem' }
+          '412': { $ref: '#/components/responses/Problem' }
+          '422': { $ref: '#/components/responses/Problem' }
+    purge:
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/IfMatchOptional'
+      post:
+        operationId: purgeTenant
+        summary: 'offboarding → purged after the grace period; destroys every data-key version. Roles: super_admin.'
+        requestBody: { $ref: '#/components/requestBodies/Lifecycle' }
+        responses:
+          '200': { $ref: '#/components/responses/TenantWithETag' }
+          '400': { $ref: '#/components/responses/Problem' }
+          '403': { $ref: '#/components/responses/Problem' }
+          '404': { $ref: '#/components/responses/Problem' }
+          '412': { $ref: '#/components/responses/Problem' }
+          '422': { $ref: '#/components/responses/Problem' }
+    rotateDataKey:
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - $ref: '#/components/parameters/IfMatchOptional'
+      post:
+        operationId: rotateDataKeyTenant
+        summary: 'Active tenants only; adds a new key version and retires (keeps) the old one. Roles: super_admin.'
+        requestBody: { $ref: '#/components/requestBodies/Lifecycle' }
+        responses:
+          '200': { $ref: '#/components/responses/TenantWithETag' }
+          '400': { $ref: '#/components/responses/Problem' }
+          '403': { $ref: '#/components/responses/Problem' }
+          '404': { $ref: '#/components/responses/Problem' }
+          '412': { $ref: '#/components/responses/Problem' }
+          '422': { $ref: '#/components/responses/Problem' }
+  requestBodies:
+    Lifecycle:
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/LifecycleRequest' }
+
+  schemas:
+    TenantStatus: { type: string, enum: [provisioning, active, suspended, offboarding, purged] }
+    IsolationTier: { type: string, enum: [pooled, dedicated] }
+
+    CreateTenantRequest:
+      type: object
+      additionalProperties: false
+      required: [slug, display_name, data_region]
+      properties:
+        slug: { type: string, pattern: '^[a-z0-9](?:[a-z0-9-]{1,61}[a-z0-9])$' }
+        display_name: { type: string, minLength: 1, maxLength: 200 }
+        data_region: { type: string, examples: [eu-central-1] }
+        isolation_tier: { $ref: '#/components/schemas/IsolationTier', default: pooled }
+        bootstrap_admin_email:
+          type: string
+          format: email
+          description: identity-svc invites this address as the first tenant_admin. Not stored by tenant-svc.
+
+    LifecycleRequest:
+      type: object
+      additionalProperties: false
+      properties:
+        reason: { type: string, minLength: 1, maxLength: 1000 }
+
+    TenantSettings:
+      type: object
+      additionalProperties: false
+      required: [limits, matching, compliance]
+      properties:
+        limits:
+          type: object
+          additionalProperties: false
+          required: [api_rps, parse_concurrency, sandbox_concurrency]
+          properties:
+            api_rps: { type: integer, minimum: 1, maximum: 10000 }
+            parse_concurrency: { type: integer, minimum: 1, maximum: 500 }
+            sandbox_concurrency: { type: integer, minimum: 1, maximum: 2000 }
+        matching:
+          type: object
+          additionalProperties: false
+          required: [weights]
+          properties:
+            weights:
+              description: Must sum to 1 (±1e-6), else 400 INVALID_SETTINGS.
+              type: object
+              additionalProperties: false
+              required: [sem, cov, exp, lex]
+              properties:
+                sem: { type: number, minimum: 0, maximum: 1 }
+                cov: { type: number, minimum: 0, maximum: 1 }
+                exp: { type: number, minimum: 0, maximum: 1 }
+                lex: { type: number, minimum: 0, maximum: 1 }
+        features:
+          type: object
+          description: Keys named <module>.<feature>.<variant>.
+          additionalProperties: { type: boolean }
+        compliance:
+          type: object
+          additionalProperties: false
+          required: [jurisdictions]
+          properties:
+            jurisdictions:
+              {
+                type: array,
+                maxItems: 50,
+                items: { type: string, pattern: '^[A-Z]{2}(-[A-Z0-9]{1,3})?$' },
+              }
+        locale: { type: string, default: en }
+
+    RetentionPolicy:
+      type: object
+      additionalProperties: false
+      required:
+        [
+          candidate_inactive_days,
+          proctoring_frames_days,
+          interview_audio_days,
+          assessment_reports_days,
+        ]
+      properties:
+        candidate_inactive_days: { type: integer, minimum: 30, maximum: 3650 }
+        proctoring_frames_days: { type: integer, minimum: 1, maximum: 365 }
+        interview_audio_days: { type: integer, minimum: 1, maximum: 1095 }
+        assessment_reports_days: { type: integer, minimum: 30, maximum: 3650 }
+
+    Tenant:
+      type: object
+      required:
+        [
+          tenant_id,
+          slug,
+          display_name,
+          isolation_tier,
+          status,
+          cell_id,
+          data_region,
+          dek_version,
+          settings,
+          retention_policy,
+          purge_not_before,
+          version,
+          created_at,
+          updated_at,
+          purged_at,
+        ]
+      properties:
+        tenant_id: { type: string, format: uuid }
+        slug: { type: string }
+        display_name: { type: string }
+        isolation_tier: { $ref: '#/components/schemas/IsolationTier' }
+        status: { $ref: '#/components/schemas/TenantStatus' }
+        cell_id: { type: string }
+        data_region: { type: string }
+        dek_version: { type: integer }
+        settings: { $ref: '#/components/schemas/TenantSettings' }
+        retention_policy: { $ref: '#/components/schemas/RetentionPolicy' }
+        purge_not_before: { type: [string, 'null'], format: date-time }
+        version: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+        purged_at: { type: [string, 'null'], format: date-time }
+
+    DirectoryEntry:
+      type: object
+      required: [tenant_id, cell_id, data_region, isolation_tier, status]
+      properties:
+        tenant_id: { type: string, format: uuid }
+        cell_id: { type: string }
+        data_region: { type: string }
+        isolation_tier: { $ref: '#/components/schemas/IsolationTier' }
+        status: { $ref: '#/components/schemas/TenantStatus' }
+
+    Problem:
+      type: object
+      required: [type, title, status, detail, instance, code]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        code:
+          type: string
+          examples:
+            [
+              TENANT_SLUG_TAKEN,
+              TENANT_SLUG_RESERVED,
+              TENANT_NOT_FOUND,
+              INVALID_TENANT_TRANSITION,
+              PURGE_GRACE_PERIOD_ACTIVE,
+              TENANT_NOT_ACTIVE,
+              UNSUPPORTED_DATA_REGION,
+              VERSION_MISMATCH,
+              IF_MATCH_REQUIRED,
+              INVALID_SETTINGS,
+              REASON_REQUIRED,
+              IDEMPOTENCY_KEY_REUSED,
+              VALIDATION_FAILED,
+            ]
+        request_id: { type: string }
+        errors:
+          type: array
+          items:
+            type: object
+            properties: { path: { type: string }, message: { type: string } }

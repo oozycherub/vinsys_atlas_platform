@@ -1,0 +1,96 @@
+{
+  "id": "G05",
+  "format": "pdf",
+  "contact": {
+    "full_name": "Farid Petrakis",
+    "email": "farid.petrakis5@mailbox.example",
+    "phone": "+31 6 8915 7539"
+  },
+  "location": "Valencia, Spain",
+  "summary": "Backend Engineer with experience in AWS, Go, GraphQL.",
+  "work_history": [
+    {
+      "title": "Backend Engineer",
+      "employer": "Orbitfield Labs",
+      "start": "2022-11",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Migrated event pipelines with AWS and Go",
+        "Automated deployment tooling using GraphQL"
+      ],
+      "skills": [
+        "AWS",
+        "Go",
+        "GraphQL"
+      ]
+    },
+    {
+      "title": "Data Engineer",
+      "employer": "Lanternfish Media",
+      "start": "2019-04",
+      "end": "2022-01",
+      "is_current": false,
+      "responsibilities": [
+        "Maintained customer APIs with Elasticsearch and SQL",
+        "Built deployment tooling using PostgreSQL"
+      ],
+      "skills": [
+        "Elasticsearch",
+        "SQL",
+        "PostgreSQL"
+      ]
+    },
+    {
+      "title": "Analytics Engineer",
+      "employer": "Tidewater Logistics",
+      "start": "2017-02",
+      "end": "2019-05",
+      "is_current": false,
+      "responsibilities": [
+        "Maintained batch jobs with Airflow and Scala",
+        "Automated event pipelines using Docker"
+      ],
+      "skills": [
+        "Airflow",
+        "Scala",
+        "Docker"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Lakeside Institute of Technology",
+      "degree": "MSc",
+      "field": "Data Science",
+      "end_year": 2015
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Certified Kubernetes Administrator",
+      "issuer": "CNCF",
+      "issued": "2024-05"
+    }
+  ],
+  "skills": [
+    "AWS",
+    "Go",
+    "GraphQL",
+    "Elasticsearch",
+    "SQL",
+    "PostgreSQL",
+    "Airflow",
+    "Scala",
+    "Docker",
+    "Kubernetes",
+    "PyTorch",
+    "Redis"
+  ],
+  "skills_line_extra": [
+    "Kubernetes",
+    "PyTorch",
+    "Redis"
+  ],
+  "file": "G05.pdf"
+}

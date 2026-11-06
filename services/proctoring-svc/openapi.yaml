@@ -1,0 +1,467 @@
+openapi: 3.1.0
+info:
+  title: Atlas proctoring-svc
+  version: 1.0.0
+  license: { name: Proprietary, identifier: LicenseRef-Proprietary }
+  description: >
+    Multi-modal AI proctoring (docs/prompts/10-proctoring-svc.md, PRD §2.3, ADR-0007). Candidates
+    start proctoring through assessment-svc (`POST /v1/sessions/{sid}:startProctoring`), which calls
+    `PUT /v1/proctoring/sessions/{sid}` here with a service token and returns the proctor token and
+    HMAC session key to the SDK. Event batches and uploads use `Authorization: Proctor apt_…`.
+    cv-inference posts analysis results; staff read timelines and decide flags. AI flags, humans
+    decide: no candidate is rejected on AI inference alone. Errors are RFC 9457 problem documents.
+servers:
+  - url: http://proctoring-svc:8091
+security:
+  - bearer: []
+
+paths:
+  /v1/proctoring/sessions/{sessionId}:
+    put:
+      operationId: startProctoring
+      summary: >
+        Start or resume proctoring (scope proctoring:sessions; called by assessment-svc). A resume
+        issues a new token and key epoch; next_seq and prev_hash continue the chain.
+      parameters:
+        [
+          { $ref: '#/components/parameters/SessionId' },
+          { $ref: '#/components/parameters/TenantId' },
+        ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [assessment_id, candidate_id, consent]
+              properties:
+                assessment_id: { type: string, format: uuid }
+                candidate_id: { type: string, format: uuid }
+                rules: { $ref: '#/components/schemas/Rules' }
+                consent:
+                  type: object
+                  description: Biometric consent (required when frames are analysed).
+                  properties:
+                    biometrics: { type: boolean }
+                    version: { type: string }
+                    granted_at: { type: string, format: date-time }
+                id_verification: { type: boolean, default: false }
+      responses:
+        '200':
+          description: The proctor token and session key (shown once; the SDK keeps them in memory).
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  proctor_token: { type: string, pattern: '^apt_' }
+                  session_key: { type: string, description: 'base64, 32 bytes' }
+                  key_epoch: { type: integer }
+                  next_seq: { type: integer }
+                  prev_hash: { type: string }
+                  rules: { $ref: '#/components/schemas/Rules' }
+                  disabled_rules: { type: array, items: { type: string } }
+                  references_required:
+                    { type: array, items: { type: string, enum: [selfie, id_document] } }
+                  server_time: { type: string, format: date-time }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409':
+          description: PROCTORING_FINALIZED.
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+        '422':
+          description: CONSENT_REQUIRED or INVALID_RULES.
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+
+  /v1/proctoring/sessions/{sessionId}/events:
+    post:
+      operationId: ingestEvents
+      summary: >
+        Candidate SDK: a batch of signed, hash-chained events (gzip allowed). MACs and the chain are
+        verified, (session, seq) is de-duplicated, client time is corrected with the median offset.
+        Forged or broken events become tamper_suspected evidence.
+      security: [{ proctor: [] }]
+      parameters: [{ $ref: '#/components/parameters/SessionId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [events]
+              properties:
+                sent_at: { type: number, description: Client clock (ms) when sent; a clock sample. }
+                events:
+                  {
+                    type: array,
+                    minItems: 1,
+                    maxItems: 200,
+                    items: { $ref: '#/components/schemas/Envelope' },
+                  }
+      responses:
+        '200':
+          description: Counts, a rotated key when due, and notices for the candidate.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  accepted: { type: integer }
+                  duplicates: { type: integer }
+                  rejected: { type: integer }
+                  last_seq: { type: integer }
+                  key_epoch: { type: integer }
+                  next_key:
+                    {
+                      type: string,
+                      description: 'base64; present when the key rotated (every 15 min)',
+                    }
+                  notices:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        rule: { type: string }
+                        severity: { type: integer }
+                        action: { type: string, enum: [flag, review, terminate] }
+                  server_time: { type: string, format: date-time }
+        '400': { $ref: '#/components/responses/Problem' }
+        '401': { $ref: '#/components/responses/Problem' }
+        '409':
+          description: PROCTORING_FINALIZED.
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+
+  /v1/proctoring/sessions/{sessionId}/frames:initiateUpload:
+    post:
+      operationId: initiateUpload
+      summary: >
+        Candidate SDK: a presigned POST for a frame, reference image or audio window (size and type
+        enforced by the policy). The upload counts once a signed `frame` event names it.
+      security: [{ proctor: [] }]
+      parameters: [{ $ref: '#/components/parameters/SessionId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kind, content_type]
+              properties:
+                kind: { type: string, enum: [frame, selfie, id_document, audio] }
+                content_type: { type: string, enum: [image/jpeg, audio/webm, audio/ogg] }
+                triggered:
+                  { type: boolean, description: Captured because MediaPipe saw 0 or ≥ 2 faces. }
+      responses:
+        '201':
+          description: The frame id and the presigned upload.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  frame_id: { type: string, format: uuid }
+                  upload:
+                    type: object
+                    properties:
+                      url: { type: string }
+                      fields: { type: object, additionalProperties: { type: string } }
+                      expires_at: { type: string, format: date-time }
+        '409':
+          description: PROCTORING_FINALIZED or REFERENCES_COMPLETE.
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+        '422':
+          description: UNSUPPORTED_UPLOAD.
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+        '429':
+          description: UPLOAD_LIMIT (2,000 per session).
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+
+  /v1/proctoring/frames/{frameId}:inference:
+    post:
+      operationId: postInference
+      summary: >
+        cv-inference (scope proctoring:inference): one frame's or audio window's analysis. A second
+        result for the same frame is ignored. The face embedding is compared with the session's
+        encrypted references here and never stored for frames.
+      parameters:
+        - { name: frameId, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                model_versions: { type: object, additionalProperties: { type: string } }
+                quality:
+                  type: object
+                  properties:
+                    luminance: { type: number }
+                    blur_variance: { type: number }
+                faces: { type: integer, minimum: 0 }
+                embedding: { type: array, items: { type: number }, minItems: 512, maxItems: 512 }
+                head_pose:
+                  type: object
+                  properties:
+                    { yaw: { type: number }, pitch: { type: number }, roll: { type: number } }
+                objects:
+                  type: array
+                  items:
+                    {
+                      type: object,
+                      properties: { label: { type: string }, score: { type: number } },
+                    }
+                phash: { type: string }
+                audio:
+                  type: object
+                  properties:
+                    speakers: { type: integer }
+                    speech_s: { type: number }
+                    window_s: { type: number }
+                error: { type: string, enum: [object_missing, undecodable] }
+      responses:
+        '204': { description: Applied. }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /v1/proctoring/sessions/{sessionId}/timeline:
+    get:
+      operationId: getTimeline
+      summary: >
+        Evidence timeline (tenant_admin, recruiter, hiring_manager, reviewer): log rows with signed
+        frame URLs (15 min), review decisions, the Trust Score breakdown and whether the server-side
+        hash chain verifies.
+      parameters:
+        [
+          { $ref: '#/components/parameters/SessionId' },
+          { $ref: '#/components/parameters/TenantId' },
+        ]
+      responses:
+        '200':
+          description: The timeline.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  session_id: { type: string, format: uuid }
+                  status: { type: string, enum: [active, finalized] }
+                  trust_score: { type: integer }
+                  band: { type: string, enum: [green, yellow, red] }
+                  breakdown: { type: object, additionalProperties: { type: integer } }
+                  revision: { type: integer }
+                  reference_status: { type: string }
+                  disabled_rules: { type: array, items: { type: string } }
+                  chain_valid: { type: boolean }
+                  entries:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        log_id: { type: integer }
+                        source: { type: string }
+                        seq: { type: integer }
+                        event_type: { type: string }
+                        severity: { type: integer }
+                        occurred_at: { type: string, format: date-time }
+                        payload: { type: object }
+                        frame_url: { type: string }
+                        review: { type: object }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /v1/proctoring/flags/{flagId}:review:
+    post:
+      operationId: reviewFlag
+      summary: >
+        A human decision on a flag (tenant_admin, recruiter, reviewer). Dismissed flags leave the
+        Trust Score; a finalised session is re-finalised (revision + 1). One decision per flag.
+      parameters:
+        - { name: flagId, in: path, required: true, schema: { type: integer, minimum: 1 } }
+        - $ref: '#/components/parameters/TenantId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [decision]
+              properties:
+                decision: { type: string, enum: [confirmed, dismissed] }
+                comment: { type: [string, 'null'], maxLength: 2000 }
+      responses:
+        '200': { description: The decision. }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409':
+          description: ALREADY_REVIEWED.
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+
+  /v1/proctoring/sessions/{sessionId}/accommodations:
+    put:
+      operationId: accommodate
+      summary: >
+        Accessibility accommodations (tenant_admin, recruiter): disable named rules for one session,
+        before or during it, with a reason. Every grant is written to the audit log.
+      parameters:
+        [
+          { $ref: '#/components/parameters/SessionId' },
+          { $ref: '#/components/parameters/TenantId' },
+        ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [disabled_rules, reason]
+              properties:
+                disabled_rules:
+                  type: array
+                  minItems: 1
+                  items:
+                    type: string
+                    enum:
+                      [
+                        window_violation,
+                        fullscreen,
+                        paste,
+                        multi_monitor,
+                        audio,
+                        no_face,
+                        multiple_faces,
+                        face_mismatch,
+                        phone,
+                        second_person,
+                      ]
+                reason: { type: string, minLength: 3, maxLength: 500 }
+      responses:
+        '200': { description: The accommodation. }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422':
+          description: INVALID_ACCOMMODATION.
+          content:
+            { application/problem+json: { schema: { $ref: '#/components/schemas/Problem' } } }
+
+  /healthz:
+    get:
+      operationId: healthz
+      summary: Liveness probe.
+      security: []
+      responses: { '200': { description: Alive. } }
+  /readyz:
+    get:
+      operationId: readyz
+      summary: Readiness probe (database reachable).
+      security: []
+      responses:
+        '200': { description: Ready. }
+        '503': { $ref: '#/components/responses/Problem' }
+
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+    proctor:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: '`Proctor apt_…`: issued by startProctoring, bound to one session.'
+  parameters:
+    SessionId: { name: sessionId, in: path, required: true, schema: { type: string, format: uuid } }
+    TenantId:
+      name: tenant_id
+      in: query
+      required: false
+      description: Required for service and platform principals; tenant users act on their own tenant.
+      schema: { type: string, format: uuid }
+  responses:
+    Problem:
+      description: RFC 9457 problem document.
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+  schemas:
+    Envelope:
+      type: object
+      description: >
+        Signed event. mac = hex(HMAC-SHA256(session_key[key_epoch], canonical JSON without mac));
+        prev_hash = hex(sha256(canonical JSON of the previous envelope, mac included)). Canonical
+        JSON: keys sorted by UTF-16 code units, no whitespace, JSON.stringify primitives (ADR-0007).
+      required: [session_id, seq, type, client_ts, key_epoch, payload, prev_hash, mac]
+      properties:
+        session_id: { type: string, format: uuid }
+        seq: { type: integer, minimum: 1 }
+        type:
+          type: string
+          enum:
+            [
+              tab_hidden,
+              fullscreen_exit,
+              paste,
+              copy,
+              cut,
+              context_menu,
+              multi_monitor,
+              face_count,
+              frame,
+              voice_activity,
+              heartbeat,
+              automation_suspected,
+              network_offline,
+              device_lost,
+              keystroke_summary,
+            ]
+        client_ts: { type: number }
+        key_epoch: { type: integer, minimum: 1 }
+        payload: { type: object }
+        prev_hash: { type: string }
+        mac: { type: string }
+    Rules:
+      type: object
+      description: The assessment's proctoring rules (PRD §2.3b); defaults apply when omitted.
+      properties:
+        window_violation:
+          type: object
+          properties:
+            enabled: { type: boolean }
+            bands:
+              {
+                type: object,
+                properties: { green_max_ms: { type: integer }, yellow_max_ms: { type: integer } },
+              }
+            terminate_after_count: { type: integer, minimum: 0, maximum: 100 }
+        image:
+          type: object
+          properties:
+            consecutive_frames_per_violation: { type: integer, minimum: 1, maximum: 20 }
+            flags:
+              {
+                type: array,
+                items:
+                  {
+                    type: string,
+                    enum: [no_face, multiple_faces, face_mismatch, phone, second_person],
+                  },
+              }
+            terminate_after_warnings: { type: integer, minimum: 0, maximum: 100 }
+        audio: { type: object, properties: { multiple_speakers_min_s: { type: number } } }
+        safe_browser: { type: boolean }
+    Problem:
+      type: object
+      required: [type, title, status, detail, instance, code]
+      properties:
+        type: { type: string, format: uri }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        code: { type: string }
+        request_id: { type: string }

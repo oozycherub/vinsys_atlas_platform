@@ -1,0 +1,7 @@
+# Silero VAD v5 (speech probability per 32 ms window at 16 kHz), ONNX, CPU is enough.
+name: "silero_vad"
+platform: "onnxruntime_onnx"
+max_batch_size: 0
+input [ { name: "input", data_type: TYPE_FP32, dims: [ -1, 512 ] } ]
+output [ { name: "output", data_type: TYPE_FP32, dims: [ -1, 1 ] } ]
+instance_group [ { kind: KIND_CPU, count: 2 } ]

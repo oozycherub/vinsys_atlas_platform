@@ -1,0 +1,20 @@
+{
+  "//": "Editor + test typecheck config. Production builds use tsconfig.build.json (project references).",
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "composite": false,
+    "incremental": false,
+    "noEmit": true,
+    "declaration": false,
+    "declarationMap": false,
+    "baseUrl": ".",
+    "paths": {
+      "@atlas/platform": ["packages/platform/src/index.ts"],
+      "@atlas/platform/testing": ["packages/platform/src/testing/index.ts"],
+      "@atlas/contracts": ["packages/contracts/src/index.ts"],
+      "@atlas/scoring": ["packages/scoring/src/index.ts"],
+      "@atlas/proctor-sdk": ["packages/proctor-sdk/src/index.ts"]
+    }
+  },
+  "include": ["packages/*/src", "packages/*/test", "services/*/src", "services/*/test"]
+}

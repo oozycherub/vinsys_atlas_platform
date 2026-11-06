@@ -1,0 +1,52 @@
+# Layer 3 against exfiltration: deny everything in the namespace, then allow only what each
+# component needs. Cloud metadata (169.254.169.254) is never reachable (also IMDSv2 hop limit 1).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: default-deny-all, namespace: atlas-sandbox }
+spec:
+  podSelector: {}
+  policyTypes: [Ingress, Egress]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: dns, namespace: atlas-sandbox }
+spec:
+  podSelector: {}
+  policyTypes: [Egress]
+  egress:
+    - to:
+        - namespaceSelector: { matchLabels: { kubernetes.io/metadata.name: kube-system } }
+          podSelector: { matchLabels: { k8s-app: kube-dns } }
+      ports: [{ protocol: UDP, port: 53 }, { protocol: TCP, port: 53 }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: judge-worker, namespace: atlas-sandbox }
+spec:
+  podSelector: { matchLabels: { app.kubernetes.io/name: judge-worker } }
+  policyTypes: [Ingress, Egress]
+  ingress: [] # nothing calls a worker (probes come from the kubelet on the node)
+  egress:
+    - to: [{ ipBlock: { cidr: '{{ .Values.egress.database.cidr }}' } }]
+      ports: [{ protocol: TCP, port: {{ .Values.egress.database.port }} }]
+    - to: [{ ipBlock: { cidr: '{{ .Values.egress.objectStorage.cidr }}' } }]
+      ports: [{ protocol: TCP, port: {{ .Values.egress.objectStorage.port }} }]
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata: { name: sandbox-api, namespace: atlas-sandbox }
+spec:
+  podSelector: { matchLabels: { app.kubernetes.io/name: sandbox-api } }
+  policyTypes: [Ingress, Egress]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels: { kubernetes.io/metadata.name: '{{ .Values.egress.callers.namespace }}' }
+      ports: [{ protocol: TCP, port: {{ .Values.api.port }} }]
+  egress:
+    - to: [{ ipBlock: { cidr: '{{ .Values.egress.database.cidr }}' } }]
+      ports: [{ protocol: TCP, port: {{ .Values.egress.database.port }} }]
+    - to: [{ ipBlock: { cidr: '{{ .Values.egress.objectStorage.cidr }}' } }]
+      ports: [{ protocol: TCP, port: {{ .Values.egress.objectStorage.port }} }]
+    - to: [{ ipBlock: { cidr: '{{ .Values.egress.kafka.cidr }}' } }]
+      ports: [{ protocol: TCP, port: {{ .Values.egress.kafka.port }} }]

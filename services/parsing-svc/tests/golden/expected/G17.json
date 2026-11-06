@@ -1,0 +1,77 @@
+{
+  "id": "G17",
+  "format": "docx",
+  "contact": {
+    "full_name": "Rafe Thorvaldsen",
+    "email": "rafe.thorvaldsen17@mailbox.example",
+    "phone": "+31 6 8885 7995"
+  },
+  "location": "Leeds, United Kingdom",
+  "summary": "Data Engineer with experience in AWS, Spark, Terraform.",
+  "work_history": [
+    {
+      "title": "Data Engineer",
+      "employer": "Orbitfield Labs",
+      "start": "2024-06",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Scaled deployment tooling with AWS and Spark",
+        "Migrated data models using Terraform"
+      ],
+      "skills": [
+        "AWS",
+        "Spark",
+        "Terraform"
+      ]
+    },
+    {
+      "title": "Platform Engineer",
+      "employer": "Lanternfish Media",
+      "start": "2020-07",
+      "end": "2024-10",
+      "is_current": false,
+      "responsibilities": [
+        "Automated batch jobs with Pandas and Elasticsearch",
+        "Automated customer APIs using TypeScript"
+      ],
+      "skills": [
+        "Pandas",
+        "Elasticsearch",
+        "TypeScript"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Riverbend Polytechnic",
+      "degree": "MSc",
+      "field": "Data Science",
+      "end_year": 2018
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Certified Kubernetes Administrator",
+      "issuer": "CNCF",
+      "issued": "2024-08"
+    }
+  ],
+  "skills": [
+    "AWS",
+    "Spark",
+    "Terraform",
+    "Pandas",
+    "Elasticsearch",
+    "TypeScript",
+    "Kafka",
+    "Scala",
+    "Linux"
+  ],
+  "skills_line_extra": [
+    "Kafka",
+    "Scala",
+    "Linux"
+  ],
+  "file": "G17.docx"
+}

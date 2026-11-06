@@ -1,0 +1,10 @@
+{
+  "comment": "Model weights (not in git). The ML team pins each url and sha256 after the fairness and detection evaluations pass (eval/); scripts/fetch_models.sh refuses unpinned or mismatching files.",
+  "models": [
+    { "name": "retinaface", "version": "mobile0.25@1", "url": null, "sha256": null },
+    { "name": "arcface", "version": "r100@1", "url": null, "sha256": null },
+    { "name": "yolo11s_proctor", "version": "yolo11s-proctor@3.2", "url": null, "sha256": null },
+    { "name": "silero_vad", "version": "v5@1", "url": null, "sha256": null },
+    { "name": "speaker_embed", "version": "ecapa-tdnn@1", "url": null, "sha256": null }
+  ]
+}

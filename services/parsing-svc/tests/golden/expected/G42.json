@@ -1,0 +1,90 @@
+{
+  "id": "G42",
+  "format": "docx",
+  "contact": {
+    "full_name": "Rafe Okonkwo",
+    "email": "rafe.okonkwo42@mailbox.example",
+    "phone": "+31 6 5087 3394"
+  },
+  "location": "Rotterdam, Netherlands",
+  "summary": "Platform Engineer with experience in AWS, Snowflake, Java.",
+  "work_history": [
+    {
+      "title": "Platform Engineer",
+      "employer": "Granite Peak Retail",
+      "start": "2024-06",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Designed customer APIs with AWS and Snowflake",
+        "Migrated reporting services using Java"
+      ],
+      "skills": [
+        "AWS",
+        "Snowflake",
+        "Java"
+      ]
+    },
+    {
+      "title": "Data Engineer",
+      "employer": "Cobalt Harbor Insurance",
+      "start": "2021-11",
+      "end": "2024-03",
+      "is_current": false,
+      "responsibilities": [
+        "Built deployment tooling with PyTorch and Pandas",
+        "Maintained customer APIs using Terraform"
+      ],
+      "skills": [
+        "PyTorch",
+        "Pandas",
+        "Terraform"
+      ]
+    },
+    {
+      "title": "Software Engineer",
+      "employer": "Copperleaf Health",
+      "start": "2017-10",
+      "end": "2021-08",
+      "is_current": false,
+      "responsibilities": [
+        "Migrated event pipelines with Grafana and Kubernetes",
+        "Designed event pipelines using Linux"
+      ],
+      "skills": [
+        "Grafana",
+        "Kubernetes",
+        "Linux"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Riverbend Polytechnic",
+      "degree": "BEng",
+      "field": "Software Engineering",
+      "end_year": 2016
+    }
+  ],
+  "certifications": [],
+  "skills": [
+    "AWS",
+    "Snowflake",
+    "Java",
+    "PyTorch",
+    "Pandas",
+    "Terraform",
+    "Grafana",
+    "Kubernetes",
+    "Linux",
+    "dbt",
+    "TypeScript",
+    "Go"
+  ],
+  "skills_line_extra": [
+    "dbt",
+    "TypeScript",
+    "Go"
+  ],
+  "file": "G42.docx"
+}

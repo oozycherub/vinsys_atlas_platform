@@ -1,0 +1,77 @@
+{
+  "id": "G10",
+  "format": "pdf",
+  "contact": {
+    "full_name": "Kaia Kowalczyk",
+    "email": "kaia.kowalczyk10@mailbox.example",
+    "phone": "+31 6 5046 9754"
+  },
+  "location": "Leeds, United Kingdom",
+  "summary": "Analytics Engineer with experience in TypeScript, dbt, Airflow.",
+  "work_history": [
+    {
+      "title": "Analytics Engineer",
+      "employer": "Lanternfish Media",
+      "start": "2023-07",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Scaled reporting services with TypeScript and dbt",
+        "Built batch jobs using Airflow"
+      ],
+      "skills": [
+        "TypeScript",
+        "dbt",
+        "Airflow"
+      ]
+    },
+    {
+      "title": "Backend Engineer",
+      "employer": "Tidewater Logistics",
+      "start": "2019-11",
+      "end": "2023-09",
+      "is_current": false,
+      "responsibilities": [
+        "Migrated customer APIs with React and PostgreSQL",
+        "Automated batch jobs using Elasticsearch"
+      ],
+      "skills": [
+        "React",
+        "PostgreSQL",
+        "Elasticsearch"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Lakeside Institute of Technology",
+      "degree": "BEng",
+      "field": "Software Engineering",
+      "end_year": 2019
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Google Professional Data Engineer",
+      "issuer": "Google Cloud",
+      "issued": "2024-09"
+    }
+  ],
+  "skills": [
+    "TypeScript",
+    "dbt",
+    "Airflow",
+    "React",
+    "PostgreSQL",
+    "Elasticsearch",
+    "Redis",
+    "Grafana",
+    "Kafka"
+  ],
+  "skills_line_extra": [
+    "Redis",
+    "Grafana",
+    "Kafka"
+  ],
+  "file": "G10.pdf"
+}

@@ -1,0 +1,71 @@
+{
+  "id": "G03",
+  "format": "txt",
+  "contact": {
+    "full_name": "Dario Brannigan",
+    "email": "dario.brannigan3@mailbox.example",
+    "phone": "+31 6 9148 6898"
+  },
+  "location": "Leeds, United Kingdom",
+  "summary": "Data Engineer with experience in React, GraphQL, Java.",
+  "work_history": [
+    {
+      "title": "Data Engineer",
+      "employer": "Tidewater Logistics",
+      "start": "2022-08",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Scaled deployment tooling with React and GraphQL",
+        "Built customer APIs using Java"
+      ],
+      "skills": [
+        "React",
+        "GraphQL",
+        "Java"
+      ]
+    },
+    {
+      "title": "Data Engineer",
+      "employer": "Meadowbrook Energy",
+      "start": "2018-08",
+      "end": "2022-09",
+      "is_current": false,
+      "responsibilities": [
+        "Scaled reporting services with Kafka and AWS",
+        "Scaled data models using PostgreSQL"
+      ],
+      "skills": [
+        "Kafka",
+        "AWS",
+        "PostgreSQL"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Northgate College of Engineering",
+      "degree": "MSc",
+      "field": "Applied Mathematics",
+      "end_year": 2018
+    }
+  ],
+  "certifications": [],
+  "skills": [
+    "React",
+    "GraphQL",
+    "Java",
+    "Kafka",
+    "AWS",
+    "PostgreSQL",
+    "Linux",
+    "SQL",
+    "Snowflake"
+  ],
+  "skills_line_extra": [
+    "Linux",
+    "SQL",
+    "Snowflake"
+  ],
+  "file": "G03.txt"
+}

@@ -1,0 +1,37 @@
+{
+  "name": "atlas-outbox",
+  "config": {
+    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+    "plugin.name": "pgoutput",
+    "database.hostname": "${env:ATLAS_PG_HOST}",
+    "database.port": "5432",
+    "database.user": "${env:ATLAS_CDC_USER}",
+    "database.password": "${env:ATLAS_CDC_PASSWORD}",
+    "database.dbname": "atlas",
+    "topic.prefix": "atlas",
+    "slot.name": "atlas_outbox",
+    "publication.name": "atlas_outbox",
+    "publication.autocreate.mode": "filtered",
+    "table.include.list": "public.outbox_events",
+    "tombstones.on.delete": "false",
+    "snapshot.mode": "no_data",
+
+    "transforms": "outbox",
+    "transforms.outbox.type": "io.debezium.transforms.outbox.EventRouter",
+    "transforms.outbox.table.field.event.id": "event_id",
+    "transforms.outbox.table.field.event.key": "aggregate_id",
+    "transforms.outbox.table.field.event.payload": "payload",
+    "transforms.outbox.route.by.field": "topic",
+    "transforms.outbox.route.topic.replacement": "${routedByValue}",
+    "transforms.outbox.table.fields.additional.placement": "event_id:header:event_id,tenant_id:header:tenant_id,aggregate_type:header:aggregate_type",
+    "transforms.outbox.table.expand.json.payload": "true",
+
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+    "value.converter.schemas.enable": "false",
+    "header.converter": "org.apache.kafka.connect.storage.StringConverter",
+
+    "heartbeat.interval.ms": "10000",
+    "errors.tolerance": "none"
+  }
+}

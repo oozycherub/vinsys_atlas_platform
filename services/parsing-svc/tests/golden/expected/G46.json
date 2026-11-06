@@ -1,0 +1,77 @@
+{
+  "id": "G46",
+  "format": "pdf2col",
+  "contact": {
+    "full_name": "Viggo Castellanos",
+    "email": "viggo.castellanos46@mailbox.example",
+    "phone": "+31 6 8555 9084"
+  },
+  "location": "Aarhus, Denmark",
+  "summary": "Backend Engineer with experience in Kubernetes, Airflow, SQL.",
+  "work_history": [
+    {
+      "title": "Backend Engineer",
+      "employer": "Lanternfish Media",
+      "start": "2023-06",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Built deployment tooling with Kubernetes and Airflow",
+        "Maintained reporting services using SQL"
+      ],
+      "skills": [
+        "Kubernetes",
+        "Airflow",
+        "SQL"
+      ]
+    },
+    {
+      "title": "Analytics Engineer",
+      "employer": "Tidewater Logistics",
+      "start": "2019-07",
+      "end": "2023-09",
+      "is_current": false,
+      "responsibilities": [
+        "Migrated reporting services with TypeScript and Elasticsearch",
+        "Designed reporting services using AWS"
+      ],
+      "skills": [
+        "TypeScript",
+        "Elasticsearch",
+        "AWS"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Westmarch University",
+      "degree": "BEng",
+      "field": "Software Engineering",
+      "end_year": 2019
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Google Professional Data Engineer",
+      "issuer": "Google Cloud",
+      "issued": "2024-02"
+    }
+  ],
+  "skills": [
+    "Kubernetes",
+    "Airflow",
+    "SQL",
+    "TypeScript",
+    "Elasticsearch",
+    "AWS",
+    "Grafana",
+    "dbt",
+    "Pandas"
+  ],
+  "skills_line_extra": [
+    "Grafana",
+    "dbt",
+    "Pandas"
+  ],
+  "file": "G46.pdf"
+}

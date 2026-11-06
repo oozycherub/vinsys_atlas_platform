@@ -1,0 +1,96 @@
+{
+  "id": "G23",
+  "format": "txt",
+  "contact": {
+    "full_name": "Xenia Brannigan",
+    "email": "xenia.brannigan23@mailbox.example",
+    "phone": "+31 6 9004 8402"
+  },
+  "location": "Gdansk, Poland",
+  "summary": "Analytics Engineer with experience in AWS, Python, Scala.",
+  "work_history": [
+    {
+      "title": "Analytics Engineer",
+      "employer": "Cobalt Harbor Insurance",
+      "start": "2024-07",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Maintained deployment tooling with AWS and Python",
+        "Maintained customer APIs using Scala"
+      ],
+      "skills": [
+        "AWS",
+        "Python",
+        "Scala"
+      ]
+    },
+    {
+      "title": "Senior Data Engineer",
+      "employer": "Copperleaf Health",
+      "start": "2021-05",
+      "end": "2024-02",
+      "is_current": false,
+      "responsibilities": [
+        "Scaled data models with PyTorch and PostgreSQL",
+        "Designed reporting services using Redis"
+      ],
+      "skills": [
+        "PyTorch",
+        "PostgreSQL",
+        "Redis"
+      ]
+    },
+    {
+      "title": "Machine Learning Engineer",
+      "employer": "Ironbark Robotics",
+      "start": "2017-11",
+      "end": "2021-04",
+      "is_current": false,
+      "responsibilities": [
+        "Migrated customer APIs with Airflow and TypeScript",
+        "Scaled deployment tooling using Go"
+      ],
+      "skills": [
+        "Airflow",
+        "TypeScript",
+        "Go"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Northgate College of Engineering",
+      "degree": "MSc",
+      "field": "Applied Mathematics",
+      "end_year": 2017
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Terraform Associate",
+      "issuer": "HashiCorp",
+      "issued": "2024-08"
+    }
+  ],
+  "skills": [
+    "AWS",
+    "Python",
+    "Scala",
+    "PyTorch",
+    "PostgreSQL",
+    "Redis",
+    "Airflow",
+    "TypeScript",
+    "Go",
+    "Java",
+    "Snowflake",
+    "React"
+  ],
+  "skills_line_extra": [
+    "Java",
+    "Snowflake",
+    "React"
+  ],
+  "file": "G23.txt"
+}

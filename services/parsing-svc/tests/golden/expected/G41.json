@@ -1,0 +1,96 @@
+{
+  "id": "G41",
+  "format": "pdf2col",
+  "contact": {
+    "full_name": "Quilla Halloran",
+    "email": "quilla.halloran41@mailbox.example",
+    "phone": "+31 6 8260 3626"
+  },
+  "location": "Tampere, Finland",
+  "summary": "Senior Data Engineer with experience in Kubernetes, Kafka, Linux.",
+  "work_history": [
+    {
+      "title": "Senior Data Engineer",
+      "employer": "Orbitfield Labs",
+      "start": "2023-01",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Scaled customer APIs with Kubernetes and Kafka",
+        "Scaled data models using Linux"
+      ],
+      "skills": [
+        "Kubernetes",
+        "Kafka",
+        "Linux"
+      ]
+    },
+    {
+      "title": "Site Reliability Engineer",
+      "employer": "Lanternfish Media",
+      "start": "2021-03",
+      "end": "2023-08",
+      "is_current": false,
+      "responsibilities": [
+        "Automated batch jobs with Redis and AWS",
+        "Automated event pipelines using Spark"
+      ],
+      "skills": [
+        "Redis",
+        "AWS",
+        "Spark"
+      ]
+    },
+    {
+      "title": "Platform Engineer",
+      "employer": "Tidewater Logistics",
+      "start": "2018-09",
+      "end": "2021-11",
+      "is_current": false,
+      "responsibilities": [
+        "Scaled customer APIs with Docker and PostgreSQL",
+        "Designed data models using SQL"
+      ],
+      "skills": [
+        "Docker",
+        "PostgreSQL",
+        "SQL"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Westmarch University",
+      "degree": "MSc",
+      "field": "Data Science",
+      "end_year": 2016
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Certified Kubernetes Administrator",
+      "issuer": "CNCF",
+      "issued": "2024-04"
+    }
+  ],
+  "skills": [
+    "Kubernetes",
+    "Kafka",
+    "Linux",
+    "Redis",
+    "AWS",
+    "Spark",
+    "Docker",
+    "PostgreSQL",
+    "SQL",
+    "React",
+    "Snowflake",
+    "Java"
+  ],
+  "skills_line_extra": [
+    "React",
+    "Snowflake",
+    "Java"
+  ],
+  "file": "G41.pdf"
+}

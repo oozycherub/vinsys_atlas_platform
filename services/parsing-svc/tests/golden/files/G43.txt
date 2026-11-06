@@ -1,0 +1,26 @@
+Selin Brannigan
+selin.brannigan43@mailbox.example | +31 6 6958 6284 | Porto, Portugal
+Ref: G43
+Summary
+Platform Engineer with experience in Docker, SQL, PostgreSQL.
+Experience
+Platform Engineer - Silverline Payments
+Nov 2024 - Present
+* Scaled reporting services with Docker and SQL
+* Scaled reporting services using PostgreSQL
+Analytics Engineer - Northwind Systems
+Dec 2021 - May 2024
+* Maintained batch jobs with Java and Spark
+* Designed batch jobs using Snowflake
+Machine Learning Engineer - Orbitfield Labs
+May 2017 - Nov 2021
+* Built data models with React and Kubernetes
+* Built batch jobs using Kafka
+Education
+MSc in Applied Mathematics, Northgate College of Engineering, 2017
+Certifications
+Terraform Associate - HashiCorp, Apr 2024
+Skills
+Docker, SQL, PostgreSQL, Java
+Spark, Snowflake, React, Kubernetes
+Kafka, PyTorch, Go, Python

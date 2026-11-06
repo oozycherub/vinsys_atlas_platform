@@ -1,0 +1,26 @@
+# Agents scale on sessions waiting for one plus expected demand (assessment sessions started
+# whose assessments use voice interviews). The scaler connects as atlas_metrics and can only call
+# interview_pending_sessions() (migration 0015).
+apiVersion: keda.sh/v1alpha1
+kind: TriggerAuthentication
+metadata: { name: interview-pending, namespace: atlas-interview }
+spec:
+  secretTargetRef:
+    - { parameter: connection, name: '{{ .Values.secrets.database }}', key: keda-url }
+---
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata: { name: interview-agent, namespace: atlas-interview }
+spec:
+  scaleTargetRef: { name: interview-agent }
+  minReplicaCount: {{ .Values.agent.keda.minReplicas }}
+  maxReplicaCount: {{ .Values.agent.keda.maxReplicas }}
+  pollingInterval: {{ .Values.agent.keda.pollingInterval }}
+  cooldownPeriod: {{ .Values.agent.keda.cooldownPeriod }}
+  triggers:
+    - type: postgresql
+      authenticationRef: { name: interview-pending }
+      metadata:
+        query: 'SELECT interview_pending_sessions()'
+        targetQueryValue: '{{ .Values.agent.keda.pendingPerWorker }}'
+        activationTargetQueryValue: '0'

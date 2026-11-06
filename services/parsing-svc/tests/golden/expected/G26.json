@@ -1,0 +1,96 @@
+{
+  "id": "G26",
+  "format": "pdf2col",
+  "contact": {
+    "full_name": "Bram Castellanos",
+    "email": "bram.castellanos26@mailbox.example",
+    "phone": "+31 6 1419 8765"
+  },
+  "location": "Valencia, Spain",
+  "summary": "Analytics Engineer with experience in Terraform, Docker, Pandas.",
+  "work_history": [
+    {
+      "title": "Analytics Engineer",
+      "employer": "Quarry Lane Software",
+      "start": "2023-12",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Migrated batch jobs with Terraform and Docker",
+        "Automated deployment tooling using Pandas"
+      ],
+      "skills": [
+        "Terraform",
+        "Docker",
+        "Pandas"
+      ]
+    },
+    {
+      "title": "Machine Learning Engineer",
+      "employer": "Silverline Payments",
+      "start": "2019-12",
+      "end": "2023-09",
+      "is_current": false,
+      "responsibilities": [
+        "Maintained data models with Spark and Linux",
+        "Designed batch jobs using Redis"
+      ],
+      "skills": [
+        "Spark",
+        "Linux",
+        "Redis"
+      ]
+    },
+    {
+      "title": "Machine Learning Engineer",
+      "employer": "Northwind Systems",
+      "start": "2016-12",
+      "end": "2019-05",
+      "is_current": false,
+      "responsibilities": [
+        "Automated reporting services with Python and Grafana",
+        "Scaled customer APIs using PyTorch"
+      ],
+      "skills": [
+        "Python",
+        "Grafana",
+        "PyTorch"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Westmarch University",
+      "degree": "BEng",
+      "field": "Software Engineering",
+      "end_year": 2015
+    }
+  ],
+  "certifications": [
+    {
+      "certificate": "Google Professional Data Engineer",
+      "issuer": "Google Cloud",
+      "issued": "2024-06"
+    }
+  ],
+  "skills": [
+    "Terraform",
+    "Docker",
+    "Pandas",
+    "Spark",
+    "Linux",
+    "Redis",
+    "Python",
+    "Grafana",
+    "PyTorch",
+    "Airflow",
+    "Elasticsearch",
+    "dbt"
+  ],
+  "skills_line_extra": [
+    "Airflow",
+    "Elasticsearch",
+    "dbt"
+  ],
+  "file": "G26.pdf"
+}

@@ -1,0 +1,12 @@
+{
+  "payload": {
+    "action": "terminate",
+    "occurred_at": "{{occurred_at}}",
+    "rule": "window_violation",
+    "session_id": "{{session_id}}",
+    "severity": 2,
+    "tenant_id": "{{tenant_id}}",
+    "trust_score": 81
+  },
+  "topic": "proctoring.violation.raised.v1"
+}

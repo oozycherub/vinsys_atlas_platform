@@ -1,0 +1,90 @@
+{
+  "id": "G24",
+  "format": "pdf",
+  "contact": {
+    "full_name": "Yusuf Ivanescu",
+    "email": "yusuf.ivanescu24@mailbox.example",
+    "phone": "+31 6 1313 8921"
+  },
+  "location": "Leeds, United Kingdom",
+  "summary": "Machine Learning Engineer with experience in Spark, React, Redis.",
+  "work_history": [
+    {
+      "title": "Machine Learning Engineer",
+      "employer": "Northwind Systems",
+      "start": "2023-09",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Scaled batch jobs with Spark and React",
+        "Maintained customer APIs using Redis"
+      ],
+      "skills": [
+        "Spark",
+        "React",
+        "Redis"
+      ]
+    },
+    {
+      "title": "Analytics Engineer",
+      "employer": "Orbitfield Labs",
+      "start": "2021-12",
+      "end": "2023-12",
+      "is_current": false,
+      "responsibilities": [
+        "Designed customer APIs with dbt and TypeScript",
+        "Migrated customer APIs using Airflow"
+      ],
+      "skills": [
+        "dbt",
+        "TypeScript",
+        "Airflow"
+      ]
+    },
+    {
+      "title": "Senior Data Engineer",
+      "employer": "Lanternfish Media",
+      "start": "2017-09",
+      "end": "2021-06",
+      "is_current": false,
+      "responsibilities": [
+        "Built deployment tooling with Kafka and SQL",
+        "Scaled deployment tooling using Linux"
+      ],
+      "skills": [
+        "Kafka",
+        "SQL",
+        "Linux"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Ashford Technical University",
+      "degree": "BSc",
+      "field": "Computer Science",
+      "end_year": 2016
+    }
+  ],
+  "certifications": [],
+  "skills": [
+    "Spark",
+    "React",
+    "Redis",
+    "dbt",
+    "TypeScript",
+    "Airflow",
+    "Kafka",
+    "SQL",
+    "Linux",
+    "Elasticsearch",
+    "Python",
+    "PostgreSQL"
+  ],
+  "skills_line_extra": [
+    "Elasticsearch",
+    "Python",
+    "PostgreSQL"
+  ],
+  "file": "G24.pdf"
+}

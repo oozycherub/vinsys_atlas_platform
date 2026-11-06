@@ -1,0 +1,625 @@
+openapi: 3.1.0
+info:
+  title: Atlas interview-svc
+  description: 'AI voice and text interviews (brick 11): plans, sessions, transcripts, evaluations and
+    overrides. Text mode is a WebSocket at /v1/interviews/{session_id}/ws: send {"type":"auth","token":"ivt_..."}
+    first, then consent and message frames.'
+  version: 1.0.0
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+paths:
+  /v1/interviews:
+    post:
+      tags:
+      - interviews
+      summary: Create Interview
+      operationId: create_interview_v1_interviews_post
+      parameters:
+      - name: tenant_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          - type: 'null'
+          title: Tenant Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateInterview'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Create Interview V1 Interviews Post
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '422':
+          $ref: '#/components/responses/422'
+        '502':
+          $ref: '#/components/responses/502'
+        '503':
+          $ref: '#/components/responses/503'
+  /v1/interviews/{interview_id}:publish:
+    post:
+      tags:
+      - interviews
+      summary: Publish Interview
+      operationId: publish_interview_v1_interviews__interview_id__publish_post
+      parameters:
+      - name: interview_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          title: Interview Id
+      - name: tenant_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          - type: 'null'
+          title: Tenant Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Publish Interview V1 Interviews  Interview Id  Publish Post
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+  /v1/interviews/{interview_id}:
+    get:
+      tags:
+      - interviews
+      summary: Get Interview
+      operationId: get_interview_v1_interviews__interview_id__get
+      parameters:
+      - name: interview_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          title: Interview Id
+      - name: tenant_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          - type: 'null'
+          title: Tenant Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Get Interview V1 Interviews  Interview Id  Get
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+  /v1/interviews/{interview_id}/plan:
+    put:
+      tags:
+      - interviews
+      summary: Update Plan
+      operationId: update_plan_v1_interviews__interview_id__plan_put
+      parameters:
+      - name: interview_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          title: Interview Id
+      - name: tenant_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          - type: 'null'
+          title: Tenant Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanBody'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Update Plan V1 Interviews  Interview Id  Plan Put
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+  /v1/interviews/{interview_id}/sessions:
+    post:
+      tags:
+      - sessions
+      summary: Create Session
+      operationId: create_session_v1_interviews__interview_id__sessions_post
+      parameters:
+      - name: interview_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          title: Interview Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSession'
+      responses:
+        '201':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Create Session V1 Interviews  Interview Id  Sessions Post
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+        '503':
+          $ref: '#/components/responses/503'
+  /v1/interview-sessions/{session_id}:join:
+    post:
+      tags:
+      - sessions
+      summary: Join
+      operationId: join_v1_interview_sessions__session_id__join_post
+      parameters:
+      - name: session_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          title: Session Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Join V1 Interview Sessions  Session Id  Join Post
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '409':
+          $ref: '#/components/responses/409'
+      security:
+      - interview: []
+  /v1/interview-sessions/{session_id}/transcript:
+    get:
+      tags:
+      - sessions
+      summary: Transcript
+      operationId: transcript_v1_interview_sessions__session_id__transcript_get
+      parameters:
+      - name: session_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          title: Session Id
+      - name: tenant_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          - type: 'null'
+          title: Tenant Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Transcript V1 Interview Sessions  Session Id  Transcript Get
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+      security:
+      - bearer: []
+      - interview: []
+  /v1/interview-sessions/{session_id}/evaluation:
+    get:
+      tags:
+      - evaluations
+      summary: Evaluation
+      operationId: evaluation_v1_interview_sessions__session_id__evaluation_get
+      parameters:
+      - name: session_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          title: Session Id
+      - name: tenant_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          - type: 'null'
+          title: Tenant Id
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Evaluation V1 Interview Sessions  Session Id  Evaluation Get
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+  /v1/interview-sessions/{session_id}/evaluation:override:
+    post:
+      tags:
+      - evaluations
+      summary: Override
+      operationId: override_v1_interview_sessions__session_id__evaluation_override_post
+      parameters:
+      - name: session_id
+        in: path
+        required: true
+        schema:
+          type: string
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          title: Session Id
+      - name: tenant_id
+        in: query
+        required: false
+        schema:
+          anyOf:
+          - type: string
+            pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          - type: 'null'
+          title: Tenant Id
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OverrideBody'
+      responses:
+        '200':
+          description: Successful Response
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+                title: Response Override V1 Interview Sessions  Session Id  Evaluation Override Post
+        '400':
+          $ref: '#/components/responses/400'
+        '401':
+          $ref: '#/components/responses/401'
+        '403':
+          $ref: '#/components/responses/403'
+        '404':
+          $ref: '#/components/responses/404'
+        '409':
+          $ref: '#/components/responses/409'
+components:
+  schemas:
+    CreateInterview:
+      properties:
+        job_profile_id:
+          type: string
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          title: Job Profile Id
+        mode:
+          type: string
+          enum:
+          - voice
+          - text
+          title: Mode
+        title:
+          anyOf:
+          - type: string
+            maxLength: 200
+            minLength: 1
+          - type: 'null'
+          title: Title
+        language:
+          type: string
+          pattern: ^[a-z]{2}(-[A-Z]{2})?$
+          title: Language
+          default: en
+        max_minutes:
+          type: integer
+          maximum: 60.0
+          minimum: 5.0
+          title: Max Minutes
+          default: 20
+        questions_per_skill:
+          type: integer
+          maximum: 3.0
+          minimum: 1.0
+          title: Questions Per Skill
+          default: 1
+        thresholds:
+          anyOf:
+          - $ref: '#/components/schemas/Thresholds'
+          - type: 'null'
+        plan:
+          anyOf:
+          - additionalProperties: true
+            type: object
+          - type: 'null'
+          title: Plan
+          description: A plan to use as-is; omitted, one is generated from the profile.
+      additionalProperties: false
+      type: object
+      required:
+      - job_profile_id
+      - mode
+      title: CreateInterview
+    CreateSession:
+      properties:
+        tenant_id:
+          type: string
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          title: Tenant Id
+        assessment_id:
+          type: string
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          title: Assessment Id
+        assessment_session_id:
+          type: string
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          title: Assessment Session Id
+        question_id:
+          type: string
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          title: Question Id
+        candidate_id:
+          type: string
+          pattern: ^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$
+          title: Candidate Id
+      additionalProperties: false
+      type: object
+      required:
+      - tenant_id
+      - assessment_id
+      - assessment_session_id
+      - question_id
+      - candidate_id
+      title: CreateSession
+    OverrideBody:
+      properties:
+        reason:
+          type: string
+          maxLength: 2000
+          minLength: 3
+          title: Reason
+        recommendation:
+          anyOf:
+          - type: string
+            enum:
+            - advance
+            - hold
+            - do_not_advance
+          - type: 'null'
+          title: Recommendation
+        scores:
+          additionalProperties:
+            anyOf:
+            - type: integer
+              maximum: 5.0
+              minimum: 1.0
+            - type: 'null'
+          type: object
+          title: Scores
+      additionalProperties: false
+      type: object
+      required:
+      - reason
+      title: OverrideBody
+    PlanBody:
+      properties:
+        plan:
+          additionalProperties: true
+          type: object
+          title: Plan
+      additionalProperties: false
+      type: object
+      required:
+      - plan
+      title: PlanBody
+    Thresholds:
+      properties:
+        advance:
+          type: number
+          maximum: 5.0
+          minimum: 1.0
+          title: Advance
+          default: 3.5
+        hold:
+          type: number
+          maximum: 5.0
+          minimum: 1.0
+          title: Hold
+          default: 2.5
+      additionalProperties: false
+      type: object
+      title: Thresholds
+    Problem:
+      type: object
+      description: RFC 9457 problem document; `code` is the stable machine-readable error.
+      required:
+      - type
+      - title
+      - status
+      - code
+      properties:
+        type:
+          type: string
+          format: uri
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        instance:
+          type: string
+        code:
+          type: string
+        request_id:
+          type: string
+      additionalProperties: true
+  responses:
+    '400':
+      description: Invalid request (VALIDATION_FAILED, INVALID_PLAN, TENANT_REQUIRED and others).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '401':
+      description: Missing or invalid bearer or interview token.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '403':
+      description: The caller lacks the role, scope or tenant.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '404':
+      description: Interview, session, job profile or evaluation not found (EVALUATION_NOT_READY).
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '409':
+      description: INTERVIEW_NOT_PUBLISHED, NOTHING_TO_PUBLISH, INTERVIEW_ENDED, CONCURRENT_UPDATE.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '422':
+      description: JOB_PROFILE_WITHOUT_SKILLS.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '502':
+      description: 'PLAN_GENERATION_FAILED: the generated plan did not pass validation.'
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    '503':
+      description: A dependency (llm-gateway, taxonomy-svc, tenant-svc) is unavailable.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+  securitySchemes:
+    bearer:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Staff tokens (recruiter, hiring_manager, tenant_admin, reviewer, super_admin) or the
+        assessment-svc service token (scope `interviews:sessions`).
+    interview:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: '`Interview ivt_...`: the candidate token issued with the session.'
+servers:
+- url: https://interview-svc.internal.atlas.dev
+security:
+- bearer: []

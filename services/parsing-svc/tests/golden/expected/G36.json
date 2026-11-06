@@ -1,0 +1,71 @@
+{
+  "id": "G36",
+  "format": "pdf2col",
+  "contact": {
+    "full_name": "Lorcan Mastrangelo",
+    "email": "lorcan.mastrangelo36@mailbox.example",
+    "phone": "+31 6 7814 2449"
+  },
+  "location": "Porto, Portugal",
+  "summary": "Data Engineer with experience in Go, React, Airflow.",
+  "work_history": [
+    {
+      "title": "Data Engineer",
+      "employer": "Northwind Systems",
+      "start": "2024-02",
+      "end": null,
+      "is_current": true,
+      "responsibilities": [
+        "Maintained deployment tooling with Go and React",
+        "Automated event pipelines using Airflow"
+      ],
+      "skills": [
+        "Go",
+        "React",
+        "Airflow"
+      ]
+    },
+    {
+      "title": "Backend Engineer",
+      "employer": "Orbitfield Labs",
+      "start": "2020-09",
+      "end": "2024-05",
+      "is_current": false,
+      "responsibilities": [
+        "Built event pipelines with Pandas and AWS",
+        "Designed deployment tooling using dbt"
+      ],
+      "skills": [
+        "Pandas",
+        "AWS",
+        "dbt"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "institution": "Westmarch University",
+      "degree": "BSc",
+      "field": "Computer Science",
+      "end_year": 2019
+    }
+  ],
+  "certifications": [],
+  "skills": [
+    "Go",
+    "React",
+    "Airflow",
+    "Pandas",
+    "AWS",
+    "dbt",
+    "Redis",
+    "Terraform",
+    "Java"
+  ],
+  "skills_line_extra": [
+    "Redis",
+    "Terraform",
+    "Java"
+  ],
+  "file": "G36.pdf"
+}
