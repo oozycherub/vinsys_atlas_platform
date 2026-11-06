@@ -1,0 +1,20 @@
+{
+  "name": "@atlas/api-clients",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Typed API clients generated from every public service's openapi.yaml (openapi-typescript), called through the gateway",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "generate": "node scripts/generate.mjs"
+  },
+  "dependencies": {
+    "openapi-fetch": "0.17.0"
+  },
+  "devDependencies": {
+    "openapi-typescript": "7.13.0"
+  }
+}

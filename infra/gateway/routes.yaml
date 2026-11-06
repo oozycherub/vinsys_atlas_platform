@@ -1,0 +1,114 @@
+# API gateway route map (docs/prompts/14-gateway-and-web.md §4). Versioned: bump `version` on any
+# change. The web app and partners call only the gateway; it resolves the tenant from the host,
+# routes to the tenant's cell, and forwards to the service that owns the path.
+#
+# Matching: a pattern matches a request whose path starts with its segments; `*` is one segment;
+# a custom verb (`:publish`) belongs to its segment. The most specific pattern wins (more literal
+# segments first). `deny` wins over everything: internal APIs never leave the cell.
+version: 4
+
+# Upstream address per cell. `{service}`, `{cell}` and `{port}` are substituted.
+upstream: 'http://{service}.{cell}.svc.cluster.local:{port}'
+
+services:
+  tenant-svc: 8081
+  identity-svc: 8082
+  taxonomy-svc: 8083
+  profile-svc: 8084
+  parsing-svc: 8086
+  matching-svc: 8087
+  assessment-svc: 8088
+  proctoring-svc: 8091
+  interview-svc: 8091
+  intelligence-svc: 8092
+  notification-svc: 8093
+  report-svc: 8094
+
+# Paths that work without a tenant subdomain (platform console, sign-in discovery).
+platform:
+  - /v1/tenants
+  - /v1/staff
+  - /v1/staff-accounts
+  - /.well-known
+
+deny:
+  - /v1/internal
+  - /v1/tenant-directory
+  - /v1/service-clients
+  - /v1/signing-keys
+  - /v1/tenants/*/ai-budget
+  - /healthz
+  - /readyz
+
+routes:
+  - { path: /v1/tenants, service: tenant-svc }
+
+  - { path: /v1/auth, service: identity-svc, public: true }
+  - { path: /v1/invitations, service: identity-svc, public: true }
+  - { path: /v1/oauth, service: identity-svc, public: true }
+  - { path: /v1/sso, service: identity-svc, public: true }
+  - { path: /v1/staff, service: identity-svc, public: true }
+  - { path: /.well-known, service: identity-svc, public: true }
+  - { path: /v1/users, service: identity-svc }
+  - { path: /v1/sso-connections, service: identity-svc }
+  - { path: /v1/staff-accounts, service: identity-svc }
+
+  - { path: /v1/skills, service: taxonomy-svc }
+  - { path: /v1/skill-edges, service: taxonomy-svc }
+  - { path: /v1/skill-suggestions, service: taxonomy-svc }
+  - { path: /v1/taxonomy, service: taxonomy-svc }
+  - { path: /v1/taxonomy-imports, service: taxonomy-svc }
+  - { path: /v1/job-families, service: taxonomy-svc }
+  - { path: /v1/job-roles, service: taxonomy-svc }
+  - { path: /v1/job-profiles, service: taxonomy-svc }
+
+  - { path: /v1/candidates/*/matches, service: matching-svc }
+  - { path: /v1/candidates, service: profile-svc }
+  - { path: /v1/documents, service: profile-svc }
+  - { path: /v1/privacy, service: profile-svc }
+
+  - { path: /v1/parse-batches, service: parsing-svc }
+  - { path: /v1/parse-jobs, service: parsing-svc }
+
+  - { path: /v1/job-requisitions, service: matching-svc }
+
+  - { path: /v1/assessments, service: assessment-svc }
+  - { path: /v1/question-banks, service: assessment-svc }
+  - { path: /v1/questions, service: assessment-svc }
+  - { path: /v1/sessions, service: assessment-svc, session: true }
+  - { path: /v1/invite-links/*:redeem, service: assessment-svc, public: true }
+  - { path: /v1/invite-links, service: assessment-svc }
+
+  - { path: /v1/proctoring, service: proctoring-svc, session: true }
+  - { path: /v1/interviews, service: interview-svc }
+  - { path: /v1/interview-sessions, service: interview-svc, session: true }
+
+  - { path: /v1/employees, service: intelligence-svc }
+  - { path: /v1/analytics, service: intelligence-svc }
+  - { path: /v1/opportunities, service: intelligence-svc }
+  - { path: /v1/applications, service: intelligence-svc }
+  - { path: /v1/allocations, service: intelligence-svc }
+  - { path: /v1/projects, service: intelligence-svc }
+  - { path: /v1/demands, service: intelligence-svc }
+  - { path: /v1/demand-batches, service: intelligence-svc }
+  - { path: /v1/fulfilment-plans, service: intelligence-svc }
+  - { path: /v1/attrition, service: intelligence-svc }
+  - { path: /v1/learning-items, service: intelligence-svc }
+  - { path: /v1/job-profile-transitions, service: intelligence-svc }
+  - { path: /v1/intelligence, service: intelligence-svc }
+
+  - { path: /v1/notification-types, service: notification-svc }
+  - { path: /v1/notification-templates, service: notification-svc }
+  - { path: /v1/notification-preferences, service: notification-svc }
+  - { path: /v1/notification-settings, service: notification-svc }
+  - { path: /v1/me/notifications, service: notification-svc }
+  - { path: /v1/me/notification-preferences, service: notification-svc }
+  - { path: /v1/reminders, service: notification-svc }
+  - { path: /v1/sending-domains, service: notification-svc }
+  - { path: /v1/webhook-endpoints, service: notification-svc }
+  - { path: /v1/webhook-deliveries, service: notification-svc }
+
+  - { path: /v1/reports, service: report-svc }
+  - { path: /v1/report-settings, service: report-svc }
+  - { path: /v1/report-gallery, service: report-svc }
+  - { path: /v1/report-artifacts/*:download, service: report-svc, public: true }

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Workspace unavailable · Atlas</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        background: #f4f5f7;
+        color: #1d2433;
+      }
+      main {
+        max-width: 32rem;
+        padding: 2rem;
+        text-align: center;
+      }
+      h1 {
+        font-size: 1.5rem;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>This workspace is temporarily unavailable</h1>
+      <p>
+        Access to <strong>{{host}}</strong> has been paused. Your data is safe. Please contact your
+        organisation’s Atlas administrator.
+      </p>
+      <p class="muted">Reference: {{request_id}}</p>
+    </main>
+  </body>
+</html>

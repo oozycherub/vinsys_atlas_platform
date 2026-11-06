@@ -1,0 +1,83 @@
+# Edge Envoy in front of the gateway (docs/prompts/14-gateway-and-web.md §2): TLS termination,
+# request limits, header hygiene, and an L7 WAF hook. Tenant resolution, routing to cells, JWT
+# pre-validation and per-tenant limits happen in the gateway (src/edge.ts) behind it, driven by
+# routes.yaml.
+static_resources:
+  listeners:
+    - name: https
+      address: { socket_address: { address: 0.0.0.0, port_value: 8443 } }
+      per_connection_buffer_limit_bytes: 32768
+      filter_chains:
+        - transport_socket:
+            name: envoy.transport_sockets.tls
+            typed_config:
+              '@type': type.googleapis.com/envoy.extensions.transport_sockets.tls.v3.DownstreamTlsContext
+              common_tls_context:
+                tls_params: { tls_minimum_protocol_version: TLSv1_2 }
+                alpn_protocols: [h2, http/1.1]
+                tls_certificate_sds_secret_configs:
+                  - name: wildcard-cert
+                    sds_config: { path_config_source: { path: /etc/envoy/sds/wildcard-cert.yaml } }
+          filters:
+            - name: envoy.filters.network.http_connection_manager
+              typed_config:
+                '@type': type.googleapis.com/envoy.extensions.filters.network.http_connection_manager.v3.HttpConnectionManager
+                stat_prefix: edge
+                use_remote_address: true
+                xff_num_trusted_hops: 0
+                normalize_path: true
+                merge_slashes: true
+                path_with_escaped_slashes_action: REJECT_REQUEST
+                request_headers_timeout: 10s
+                stream_idle_timeout: 300s
+                max_request_headers_kb: 32
+                common_http_protocol_options: { headers_with_underscores_action: REJECT_REQUEST }
+                generate_request_id: true
+                preserve_external_request_id: false
+                route_config:
+                  name: edge
+                  request_headers_to_remove: [x-atlas-tenant-id, x-atlas-cell, x-atlas-subject]
+                  response_headers_to_add:
+                    - header:
+                        {
+                          key: Strict-Transport-Security,
+                          value: 'max-age=63072000; includeSubDomains',
+                        }
+                    - header: { key: X-Content-Type-Options, value: nosniff }
+                  virtual_hosts:
+                    - name: all
+                      domains: ['*']
+                      routes:
+                        - match: { prefix: / }
+                          route: { cluster: gateway, timeout: 0s, idle_timeout: 300s }
+                http_filters:
+                  # WAF: OWASP CRS through the Coraza proxy-wasm filter (rules mounted from
+                  # /etc/envoy/waf). Kept as a filter so the cloud WAF can replace it per region.
+                  - name: envoy.filters.http.wasm
+                    typed_config:
+                      '@type': type.googleapis.com/envoy.extensions.filters.http.wasm.v3.Wasm
+                      config:
+                        name: coraza
+                        root_id: ''
+                        configuration:
+                          '@type': type.googleapis.com/google.protobuf.StringValue
+                          value: '{"directives_map":{"default":["Include @recommended-conf","Include @crs-setup-conf","Include @owasp_crs/*.conf","SecRuleEngine On"]},"default_directives":"default"}'
+                        vm_config:
+                          runtime: envoy.wasm.runtime.v8
+                          code: { local: { filename: /etc/envoy/waf/coraza-proxy-wasm.wasm } }
+                  - name: envoy.filters.http.buffer
+                    typed_config:
+                      '@type': type.googleapis.com/envoy.extensions.filters.http.buffer.v3.Buffer
+                      max_request_bytes: 26214400
+                  - name: envoy.filters.http.router
+                    typed_config:
+                      '@type': type.googleapis.com/envoy.extensions.filters.http.router.v3.Router
+  clusters:
+    - name: gateway
+      type: STRICT_DNS
+      connect_timeout: 2s
+      load_assignment:
+        cluster_name: gateway
+        endpoints:
+          - lb_endpoints:
+              - endpoint: { address: { socket_address: { address: gateway, port_value: 8080 } } }

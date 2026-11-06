@@ -1,0 +1,14 @@
+{
+  "payload": {
+    "alert_id": "{{alert_id}}",
+    "drivers": ["{{driver}}", "{{driver}}", "{{driver}}"],
+    "employee_id": "{{employee_id}}",
+    "manager_user_id": "{{manager_user_id}}",
+    "model_version": "{{model_version}}",
+    "occurred_at": "{{occurred_at}}",
+    "recipients": ["hrbp", "manager"],
+    "suggested_actions": [],
+    "tenant_id": "{{tenant_id}}"
+  },
+  "topic": "intel.attrition.alert_raised.v1"
+}

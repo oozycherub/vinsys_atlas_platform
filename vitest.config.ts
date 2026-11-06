@@ -30,8 +30,21 @@ export default defineConfig({
   test: {
     coverage: {
       provider: 'v8',
-      include: ['packages/*/src/**/*.ts', 'services/*/src/**/*.ts'],
-      exclude: ['**/main.ts', '**/testing/**'],
+      include: [
+        'packages/*/src/**/*.ts',
+        'services/*/src/**/*.ts',
+        'infra/gateway/src/**/*.ts',
+        'apps/web/lib/**/*.ts',
+      ],
+      exclude: [
+        '**/main.ts',
+        '**/testing/**',
+        // Generated type declarations (no runtime code).
+        'packages/api-clients/src/generated/**',
+        // Browser-only glue, exercised by the Playwright suite (e2e/), not by unit tests.
+        'apps/web/lib/api.ts',
+        'apps/web/lib/runner-api.ts',
+      ],
       thresholds: { 'services/*/src/domain/**': { lines: 90 } },
     },
     projects: [
@@ -40,7 +53,12 @@ export default defineConfig({
         resolve: { alias },
         test: {
           name: 'unit',
-          include: ['packages/*/test/unit/**/*.test.ts', 'services/*/test/unit/**/*.test.ts'],
+          include: [
+            'packages/*/test/unit/**/*.test.ts',
+            'services/*/test/unit/**/*.test.ts',
+            'infra/gateway/test/unit/**/*.test.ts',
+            'apps/web/test/unit/**/*.test.ts',
+          ],
           environment: 'node',
         },
       },
@@ -52,6 +70,7 @@ export default defineConfig({
           include: [
             'packages/*/test/integration/**/*.test.ts',
             'services/*/test/integration/**/*.test.ts',
+            'infra/gateway/test/integration/**/*.test.ts',
           ],
           environment: 'node',
           testTimeout: 30_000,

@@ -12,11 +12,14 @@
     "packages/platform",
     "packages/scoring",
     "packages/proctor-sdk",
-    "services/*"
+    "services/*",
+    "packages/api-clients",
+    "infra/gateway",
+    "apps/web"
   ],
   "scripts": {
     "build": "tsc -b tsconfig.build.json",
-    "typecheck": "tsc -b tsconfig.build.json && tsc -p tsconfig.json",
+    "typecheck": "tsc -b tsconfig.build.json && tsc -p tsconfig.json && tsc -p apps/web/tsconfig.json && tsc -p e2e/tsconfig.json",
     "lint": "eslint . --max-warnings=0",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
@@ -25,12 +28,15 @@
     "test:integration": "vitest run --project integration",
     "test:coverage": "vitest run --coverage",
     "clean": "tsc -b tsconfig.build.json --clean",
-    "migrate": "node packages/platform/dist/db/migrate-cli.js"
+    "migrate": "node packages/platform/dist/db/migrate-cli.js",
+    "e2e": "playwright test -c e2e/playwright.config.ts"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.14.0",
     "@electric-sql/pglite": "0.5.15",
     "@electric-sql/pglite-pgvector": "0.0.16",
     "@eslint/js": "9.39.5",
+    "@playwright/test": "1.65.0",
     "@swc/core": "1.16.21",
     "@types/node": "24.19.2",
     "@types/pg": "8.23.1",

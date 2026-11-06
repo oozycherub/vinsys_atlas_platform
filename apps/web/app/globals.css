@@ -1,0 +1,26 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-brand: #1f4fd1;
+  --color-brand-dark: #173c9f;
+  --color-ink: #1d2433;
+  --color-muted: #555f73;
+}
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-slate-50 text-ink antialiased;
+}
+
+/* Visible focus for keyboard users (WCAG 2.2 2.4.7 / 2.4.11). */
+:focus-visible {
+  outline: 3px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+.sr-only-focusable:not(:focus) {
+  @apply sr-only;
+}

@@ -1,0 +1,19 @@
+# Feast repository for the attrition features (optional: `uv sync --extra feast`). The nightly
+# pipeline writes the same features to attrition_feature_snapshots, which is the offline store.
+project: atlas_intelligence
+provider: local
+registry:
+  registry_type: sql
+  path: ${ATLAS_FEAST_REGISTRY_URL}
+offline_store:
+  type: postgres
+  host: ${ATLAS_FEAST_PG_HOST}
+  port: 5432
+  database: atlas
+  db_schema: public
+  user: ${ATLAS_FEAST_PG_USER}
+  password: ${ATLAS_FEAST_PG_PASSWORD}
+online_store:
+  type: redis
+  connection_string: ${ATLAS_FEAST_REDIS}
+entity_key_serialization_version: 3

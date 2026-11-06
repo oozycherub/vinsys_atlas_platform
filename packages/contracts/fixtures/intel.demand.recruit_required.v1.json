@@ -1,0 +1,23 @@
+{
+  "payload": {
+    "account_id": "acme",
+    "demand_id": "{{demand_id}}",
+    "headcount": 2,
+    "job_profile_id": null,
+    "location": null,
+    "occurred_at": "{{occurred_at}}",
+    "plan_id": "{{plan_id}}",
+    "skills": [
+      {
+        "weight": 1.0,
+        "skill_id": "{{skill_id}}",
+        "must_have": false,
+        "target_proficiency": 5.0
+      }
+    ],
+    "start_date": "{{start_date}}",
+    "tenant_id": "{{tenant_id}}",
+    "title": "Quant"
+  },
+  "topic": "intel.demand.recruit_required.v1"
+}

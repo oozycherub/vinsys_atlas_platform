@@ -16,3 +16,10 @@ __pycache__/
 .ruff_cache/
 .coverage
 coverage.out
+
+# Copied at build (apps/web/scripts/copy-monaco.mjs)
+apps/web/public/monaco/
+apps/web/.next/
+apps/web/next-env.d.ts
+e2e/test-results/
+e2e/playwright-report/

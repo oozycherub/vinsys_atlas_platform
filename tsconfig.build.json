@@ -14,6 +14,9 @@
       "path": "packages/proctor-sdk"
     },
     {
+      "path": "packages/api-clients"
+    },
+    {
       "path": "services/tenant-svc"
     },
     {
@@ -30,6 +33,18 @@
     },
     {
       "path": "services/assessment-svc"
+    },
+    {
+      "path": "services/intelligence-svc"
+    },
+    {
+      "path": "services/notification-svc"
+    },
+    {
+      "path": "services/report-svc"
+    },
+    {
+      "path": "infra/gateway"
     }
   ]
 }

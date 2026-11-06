@@ -2,6 +2,7 @@ import { Inject, Injectable } from '@nestjs/common';
 import { type Logger } from 'pino';
 import {
   CandidateSkillsUpdated,
+  DemandRecruitRequired,
   ErasureAcknowledged,
   ErasureRequested,
   JobProfileUpdated,
@@ -16,6 +17,7 @@ import {
   type ConsumedEvent,
   type EventHandler,
   setTenantContext,
+  newId,
   type Tx,
 } from '@atlas/platform';
 import { evidenceSnippets, profileText } from '../domain/features';
@@ -69,7 +71,56 @@ export class MatchingEventHandlers {
       [TenantSettingsUpdated.topic]: (tx, e) => this.settingsUpdated(tx, e),
       [ErasureRequested.topic]: (tx, e) => this.erasure(tx, e),
       [TenantPurged.topic]: (tx, e) => this.purged(tx, e),
+      [DemandRecruitRequired.topic]: (tx, e) => this.recruitRequired(tx, e),
     };
+  }
+
+  /**
+   * A fulfilment plan could not staff a demand internally (ADR-0009 §5): a requisition is
+   * created on hold for a recruiter to review and open. One per demand; a later plan for the
+   * same demand updates its openings while it is still on hold.
+   */
+  private async recruitRequired(tx: Tx, e: ConsumedEvent): Promise<undefined> {
+    const p = e.payload as Payload<typeof DemandRecruitRequired>;
+    await setTenantContext(tx, p.tenant_id);
+    const existing = await this.requisitions.bySource(tx, 'intelligence_demand', p.demand_id);
+    const now = this.clock.now();
+    if (existing) {
+      if (existing.status === 'on_hold' && existing.openings !== p.headcount)
+        await this.requisitions.update(
+          tx,
+          { ...existing, openings: p.headcount, updatedAt: now },
+          existing.version,
+        );
+      return undefined;
+    }
+    const id = newId();
+    const skills = p.skills.map((s) => `${s.skill_id} (target ${s.target_proficiency})`).join(', ');
+    await this.requisitions.insert(tx, {
+      tenantId: p.tenant_id,
+      id,
+      title: p.title,
+      description: `Raised by a fulfilment plan: no internal fit for ${p.headcount} of this demand${
+        p.account_id ? ` for ${p.account_id}` : ''
+      }, starting ${p.start_date}. Required skills: ${skills || 'from the job profile'}.`,
+      openings: p.headcount,
+      location: p.location,
+      hiringManagerId: null,
+      jobProfileId: p.job_profile_id,
+      minExperienceYears: null,
+      keywords: [],
+      status: 'on_hold',
+      calibrationStatus: 'uncalibrated',
+      calibration: null,
+      calibrationVersion: 0,
+      calibratedAt: null,
+      version: 1,
+      createdBy: 'intelligence-svc',
+      createdAt: now,
+      updatedAt: now,
+    });
+    await this.requisitions.linkSource(tx, 'intelligence_demand', p.demand_id, id);
+    return undefined;
   }
 
   private async resumeParsed(tx: Tx, e: ConsumedEvent) {

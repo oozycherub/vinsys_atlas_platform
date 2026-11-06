@@ -62,6 +62,14 @@ export interface RequisitionRepository {
   embedding(tx: Tx, id: string, model: string): Promise<number[] | null>;
   scorable(tx: Tx): Promise<Calibrated[]>;
   byJobProfile(tx: Tx, jobProfileId: string): Promise<Requisition[]>;
+  /** The requisition created from another brick's record (e.g. a demand), if any. */
+  bySource(tx: Tx, source: 'intelligence_demand', ref: string): Promise<Requisition | null>;
+  linkSource(
+    tx: Tx,
+    source: 'intelligence_demand',
+    ref: string,
+    requisitionId: string,
+  ): Promise<void>;
   setLexicalMax(tx: Tx, id: string, max: number): Promise<void>;
   lexicalMax(tx: Tx, id: string): Promise<number>;
 }

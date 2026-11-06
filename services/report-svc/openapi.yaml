@@ -1,0 +1,211 @@
+openapi: 3.1.0
+info:
+  title: Atlas report-svc
+  version: 1.0.0
+  license: { name: Proprietary, identifier: LicenseRef-Proprietary }
+  description: >
+    Candidate assessment PDFs, streaming Excel exports and the skills-intelligence report gallery
+    (docs/prompts/13-notification-report.md, ADR-0010). Reports are generated asynchronously:
+    `POST /v1/reports` returns 202 with a job; `GET /v1/reports/{id}` returns, once ready, a signed
+    download link valid for 15 minutes. The link itself is the credential (no token). Candidate
+    reports follow the tenant's section settings; mandatory sections are always present and
+    proctoring images appear only when their section is enabled. Errors are RFC 9457 problem
+    documents; custom methods follow AIP-136.
+servers:
+  - url: http://report-svc:8094
+security:
+  - bearer: []
+
+paths:
+  /v1/report-settings:
+    parameters: [{ $ref: '#/components/parameters/TenantId' }]
+    get:
+      operationId: getReportSettings
+      summary: The candidate report's sections and which are on (staff).
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '403': { $ref: '#/components/responses/Problem' }
+    put:
+      operationId: putReportSettings
+      summary: Turns optional sections on or off (tenant_admin). Mandatory sections cannot be turned off.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [sections]
+              properties:
+                sections:
+                  type: array
+                  items:
+                    type: object
+                    required: [key, enabled]
+                    properties:
+                      key:
+                        type: string
+                        enum: [summary, skill_scores, integrity, proctoring_evidence, ai_interview]
+                      enabled: { type: boolean }
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /v1/report-gallery:
+    get:
+      operationId: listGallery
+      summary: The lakehouse reports and their parameters (tenant_admin, hiring_manager).
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /v1/reports:
+    parameters: [{ $ref: '#/components/parameters/TenantId' }]
+    get:
+      operationId: listReports
+      summary: The caller's reports (tenant admins see all of the tenant's).
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '401': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: requestReport
+      summary: Queues a report.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - type: object
+                  required: [type, params]
+                  properties:
+                    type: { const: candidate_assessment_pdf }
+                    params:
+                      type: object
+                      required: [session_id]
+                      properties:
+                        session_id: { type: string, format: uuid }
+                        sections:
+                          type: array
+                          items: { type: string }
+                          description: Narrows the optional sections; cannot add disabled ones.
+                - type: object
+                  required: [type, params]
+                  properties:
+                    type: { const: assessment_results_xlsx }
+                    params:
+                      type: object
+                      required: [assessment_id]
+                      properties: { assessment_id: { type: string, format: uuid } }
+                - type: object
+                  required: [type, params]
+                  properties:
+                    type: { const: gallery_xlsx }
+                    params:
+                      type: object
+                      required: [report]
+                      properties:
+                        report: { type: string }
+                        values:
+                          type: object
+                          description: The report's declared parameters (dates as YYYY-MM-DD).
+      responses:
+        '202': { $ref: '#/components/responses/Report' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/reports/{id}:
+    get:
+      operationId: getReport
+      summary: The job's status and, when ready, a fresh signed link (15 minutes).
+      parameters:
+        [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+      responses:
+        '200': { $ref: '#/components/responses/Report' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/report-artifacts/{id}:download:
+    get:
+      operationId: downloadArtifact
+      summary: Streams the file. Authorised by the signed query string only.
+      security: []
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { name: tenant_id, in: query, required: true, schema: { type: string, format: uuid } }
+        - { name: exp, in: query, required: true, schema: { type: integer } }
+        - { name: sig, in: query, required: true, schema: { type: string } }
+      responses:
+        '200':
+          description: The file.
+          content:
+            application/pdf: { schema: { type: string, format: binary } }
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema: { type: string, format: binary }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /healthz:
+    get:
+      operationId: healthz
+      summary: Liveness.
+      security: []
+      responses: { '200': { $ref: '#/components/responses/Object' } }
+  /readyz:
+    get:
+      operationId: readyz
+      summary: Readiness (database reachable).
+      security: []
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '503': { $ref: '#/components/responses/Problem' }
+
+        '401': { $ref: '#/components/responses/Problem' }
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+  parameters:
+    Id: { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    TenantId:
+      name: tenant_id
+      in: query
+      description: Required for platform staff; tenant users act on their own tenant.
+      schema: { type: string, format: uuid }
+  responses:
+    Object:
+      description: OK
+      content: { application/json: { schema: { type: object } } }
+    Report:
+      description: A report job.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              report_id: { type: string, format: uuid }
+              type: { type: string }
+              status: { type: string, enum: [queued, running, ready, failed] }
+              params: { type: object }
+              requested_by: { type: string }
+              error: { type: [string, 'null'] }
+              created_at: { type: string, format: date-time }
+              finished_at: { type: [string, 'null'], format: date-time }
+              download:
+                type: [object, 'null']
+                properties:
+                  url: { type: string, format: uri }
+                  expires_at: { type: string, format: date-time }
+                  file_name: { type: string }
+                  content_type: { type: string }
+                  size_bytes: { type: integer }
+    Problem:
+      description: RFC 9457 problem document (`code` is the stable error).
+      content:
+        application/problem+json:
+          schema:
+            type: object
+            required: [type, title, status, code]
+            properties:
+              type: { type: string }
+              title: { type: string }
+              status: { type: integer }
+              detail: { type: string }
+              code: { type: string }
+              request_id: { type: string }
+
+    '401': { $ref: '#/components/responses/Problem' }

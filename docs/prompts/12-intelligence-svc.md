@@ -1,5 +1,39 @@
 # Component Prompt 12: intelligence-svc (Workforce Intelligence & Internal Marketplace)
 
+## Status
+
+**Built:** `services/intelligence-svc` (TypeScript) and `services/intelligence-ml` (Python: CP-SAT plans, the attrition pipeline as Dagster jobs, a model card and an evaluation report), plus contracts. The deviations are recorded in ADR-0009:
+
+- intelligence-svc owns an HR roster fed by HRIS sync, since department, tenure and exits are on no event;
+- allocations are capped by a trigger serialised per employee (an `EXCLUDE` constraint cannot sum percentages);
+- fulfilment objectives use the structured score (no embeddings in batch);
+- Feast is declared (`feature_repo/`, optional extra) while the pipeline computes the same features in SQL;
+- the migrations are `0017` (0015 was taken) and `0018` (matching-svc's requisition sources).
+
+**Verified on this machine:**
+
+- The allocation constraint refuses a 120% overbooking (database trigger, also straight into the table).
+- The fulfilment classification matches the golden scenarios (redeploy, upskill, recruit; capacity; learning time).
+- Career-path readiness golden numbers, from one golden file shared by TypeScript and Python.
+- Attrition endpoints return 403 for managers without the `hrbp` scope, and for employees always.
+- No protected attributes in the feature list (and proxies dropped by MI).
+- Alert throttling; the ECE and parity gates.
+- Leak tests on opportunities, analytics, demands and attrition.
+- matching-svc replays the recorded `intel.demand.recruit_required.v1` fixture and opens one on-hold requisition per demand.
+- Seeded mutations: 26 of 26 caught in TypeScript (intelligence-svc, the capacity trigger, matching-svc), 24 of 24 in intelligence-ml.
+
+**Not verified here:**
+
+- feed p95 < 300 ms, a 5k × 50k solve ≤ 10 min, dashboards p95 < 2 s;
+- attrition quality on real HR data (the evaluation report is synthetic);
+- Feast serving.
+
+**Supporting changes:**
+
+- contracts: `intel.*` events;
+- matching-svc: a `recruit_required` consumer;
+- the Makefile runs intelligence-ml's tests with OpenMP on macOS.
+
 ## 1. Context
 
 - PRD Module 5 (§2.5 a–d) and the feature inventory's Talent Management sections (skill gaps, career paths, mobility, demand fulfilment, analytics).
@@ -20,7 +54,7 @@
 
 ## 3. Owned data
 
-Migration `0015_intelligence.sql`: `job_profile_transitions`, `opportunities`, `opportunity_matches`, `opportunity_applications`, `projects`, `project_allocations` (exclusion constraint: allocation ≤ 100% over overlapping ranges), `demands`, `fulfilment_plans`, `fulfilment_plan_lines`, `skill_gap_aggregates`, `attrition_scores` (HRBP-only RLS policy in addition to the tenant policy), `learning_items`.
+Migration `0017_intelligence.sql` (0015 was taken): `job_profile_transitions`, `opportunities`, `opportunity_matches`, `opportunity_applications`, `projects`, `project_allocations` (exclusion constraint: allocation ≤ 100% over overlapping ranges), `demands`, `fulfilment_plans`, `fulfilment_plan_lines`, `skill_gap_aggregates`, `attrition_scores` (HRBP-only RLS policy in addition to the tenant policy), `learning_items`.
 
 ## 4. API contract
 

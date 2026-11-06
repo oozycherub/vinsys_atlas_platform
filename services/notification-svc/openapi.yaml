@@ -1,0 +1,565 @@
+openapi: 3.1.0
+info:
+  title: Atlas notification-svc
+  version: 1.0.0
+  license: { name: Proprietary, identifier: LicenseRef-Proprietary }
+  description: >
+    Email, in-app (SSE) and webhook notifications (docs/prompts/13-notification-report.md,
+    ADR-0010): tenant templates in MJML with a placeholder allowlist per type, per-type toggles and
+    personal opt-outs, quiet hours and a daily cap, reminders, verified sending domains, and signed
+    webhooks with retries, a dead-letter queue and automatic disabling. Internal endpoints (role
+    `service`, scope `notifications:send`) accept sends from other services; their bodies carry
+    addresses and bearer links, which are never logged or put on events. Tenant users act on their
+    own tenant; platform staff pass tenant_id. Errors are RFC 9457 problem documents; custom
+    methods follow AIP-136.
+
+
+    **Webhook signatures.** Every delivery carries `Atlas-Signature: t=<unix seconds>,v1=<hex>`
+    where `v1 = HMAC-SHA256(endpoint secret, "<t>.<raw body>")`. Receivers recompute it over the
+    raw body, compare in constant time and reject `t` more than 5 minutes from their clock.
+    `Atlas-Delivery-Id` identifies the attempt's delivery; the body's `id` is the event id (use it
+    to de-duplicate).
+servers:
+  - url: http://notification-svc:8093
+security:
+  - bearer: []
+
+paths:
+  /v1/internal/link-messages:
+    post:
+      operationId: sendLinkMessage
+      summary: "identity-svc's invitation and magic-link emails (service, scope notifications:send)."
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [kind, tenant_id, email, url, expires_at]
+              additionalProperties: false
+              properties:
+                kind: { type: string, enum: [invitation, magic_link] }
+                tenant_id: { type: string, format: uuid }
+                email: { type: string, format: email }
+                url: { type: string, format: uri, description: 'https only; a bearer secret.' }
+                expires_at: { type: string, format: date-time }
+      responses:
+        '202': { $ref: '#/components/responses/Accepted' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /v1/internal/messages:
+    post:
+      operationId: sendMessage
+      summary: Messages to people who are not users, e.g. a candidate's assessment invitation.
+      parameters: [{ $ref: '#/components/parameters/IdempotencyKey' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, tenant_id, email]
+              additionalProperties: false
+              properties:
+                type: { type: string, enum: [candidate_assessment_invitation] }
+                tenant_id: { type: string, format: uuid }
+                email: { type: string, format: email }
+                subject_id:
+                  type: [string, 'null']
+                  format: uuid
+                  description: The candidate it is about (erasure removes it).
+                url: { type: [string, 'null'], format: uri }
+                expires_at: { type: [string, 'null'], format: date-time }
+                values:
+                  type: object
+                  additionalProperties: { type: string }
+                  description: Placeholder values (the type's allowlist, without URL and Expires_At).
+      responses:
+        '202': { $ref: '#/components/responses/Accepted' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /v1/internal/recipients/{userId}:
+    put:
+      operationId: upsertRecipient
+      summary: Directory updates from other services (display name, locale, time zone, tags such as hrbp).
+      parameters:
+        - { name: userId, in: path, required: true, schema: { type: string, maxLength: 200 } }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tenant_id]
+              additionalProperties: false
+              properties:
+                tenant_id: { type: string, format: uuid }
+                email: { type: [string, 'null'], format: email }
+                display_name: { type: [string, 'null'] }
+                roles: { type: array, items: { type: string } }
+                tags: { type: array, items: { type: string } }
+                locale: { type: string }
+                time_zone: { type: [string, 'null'] }
+                active: { type: boolean }
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '403': { $ref: '#/components/responses/Problem' }
+
+  /v1/notification-types:
+    get:
+      operationId: listNotificationTypes
+      summary: Types with their placeholder allowlists, channels and whether they are transactional.
+      responses:
+        '200': { $ref: '#/components/responses/Items' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /v1/notification-templates:
+    parameters: [{ $ref: '#/components/parameters/TenantId' }]
+    get:
+      operationId: listTemplates
+      summary: The tenant's templates (tenant_admin). Types without one use the built-in template.
+      responses:
+        '200': { $ref: '#/components/responses/Items' }
+        '403': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createTemplate
+      summary: >
+        Adds a template (tenant_admin). Unknown placeholders, `{{…}}`, scripts, event handlers,
+        javascript: URLs and invalid MJML are rejected; {URL} may only be an href.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, channel, subject, source]
+              additionalProperties: false
+              properties:
+                tenant_id: { type: string, format: uuid }
+                type: { type: string }
+                channel: { type: string, enum: [email, in_app] }
+                locale: { type: string, default: en }
+                subject: { type: string, maxLength: 300 }
+                source: { type: string, description: 'MJML (email) or plain text (in_app).' }
+      responses:
+        '201': { $ref: '#/components/responses/Object' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /v1/notification-templates:preview:
+    post:
+      operationId: previewTemplate
+      summary: Validates and renders with sample or given values; nothing is stored or sent.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, channel]
+              properties:
+                type: { type: string }
+                channel: { type: string, enum: [email, in_app] }
+                subject: { type: string }
+                source: { type: string }
+                values: { type: object, additionalProperties: { type: string } }
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /v1/notification-templates/{id}:
+    parameters:
+      [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+    get:
+      operationId: getTemplate
+      summary: One template.
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '404': { $ref: '#/components/responses/Problem' }
+    put:
+      operationId: updateTemplate
+      summary: Replaces subject and source (validated as on create); the version increases.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [subject, source]
+              properties: { subject: { type: string }, source: { type: string } }
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteTemplate
+      summary: Deletes it; the built-in template applies again.
+      responses:
+        '204': { description: Deleted. }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /v1/notification-preferences:
+    get:
+      operationId: listPreferences
+      summary: The tenant's per-type toggles (tenant_admin).
+      parameters: [{ $ref: '#/components/parameters/TenantId' }]
+      responses:
+        '200': { $ref: '#/components/responses/Items' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /v1/notification-preferences/{type}:
+    put:
+      operationId: setPreference
+      summary: Turns a type, or one of its channels, on or off for the tenant. Transactional types are refused (422).
+      parameters:
+        - { $ref: '#/components/parameters/Type' }
+        - { $ref: '#/components/parameters/TenantId' }
+      requestBody: { $ref: '#/components/requestBodies/Preference' }
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /v1/me/notification-preferences/{type}:
+    put:
+      operationId: setOwnPreference
+      summary: The caller's own opt-out for a type or channel (not for transactional types).
+      parameters: [{ $ref: '#/components/parameters/Type' }]
+      requestBody: { $ref: '#/components/requestBodies/Preference' }
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /v1/notification-settings:
+    parameters: [{ $ref: '#/components/parameters/TenantId' }]
+    get:
+      operationId: getSettings
+      summary: Quiet hours, time zone, daily cap and sender name (tenant_admin).
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '401': { $ref: '#/components/responses/Problem' }
+    put:
+      operationId: putSettings
+      summary: Replaces the settings. Quiet hours and the cap defer non-transactional email; they never drop it.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quiet_hours:
+                  type: [object, 'null']
+                  properties:
+                    start: { type: string, pattern: '^([01]\d|2[0-3]):[0-5]\d$' }
+                    end: { type: string, pattern: '^([01]\d|2[0-3]):[0-5]\d$' }
+                time_zone: { type: string, default: UTC }
+                max_per_day: { type: integer, minimum: 1, maximum: 100, default: 5 }
+                from_name: { type: [string, 'null'] }
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '400': { $ref: '#/components/responses/Problem' }
+
+  /v1/sending-domains:
+    parameters: [{ $ref: '#/components/parameters/TenantId' }]
+    get:
+      operationId: listDomains
+      summary: Sending domains with their DNS records and verification state.
+      responses:
+        '200': { $ref: '#/components/responses/Items' }
+        '401': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: addDomain
+      summary: Registers a domain; the response lists the TXT (ownership, SPF) and DKIM CNAME records to publish.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [domain]
+              properties: { tenant_id: { type: string, format: uuid }, domain: { type: string } }
+      responses:
+        '201': { $ref: '#/components/responses/Object' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /v1/sending-domains/{id}:verify:
+    post:
+      operationId: verifyDomain
+      summary: Looks the records up in DNS; verified domains become the sender.
+      parameters:
+        [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/sending-domains/{id}:
+    delete:
+      operationId: deleteDomain
+      summary: Removes a domain.
+      parameters:
+        [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+      responses:
+        '204': { description: Deleted. }
+        '404': { $ref: '#/components/responses/Problem' }
+
+  /v1/reminders:
+    get:
+      operationId: listReminders
+      summary: Scheduled and past reminders (tenant_admin, hiring_manager).
+      parameters:
+        - { $ref: '#/components/parameters/TenantId' }
+        - { name: status, in: query, schema: { type: string, enum: [scheduled, sent, cancelled] } }
+      responses:
+        '200': { $ref: '#/components/responses/Items' }
+        '401': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: scheduleReminder
+      summary: Schedules a self-rating or manager-rating reminder (tenant_admin, hiring_manager, service).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [type, recipient_user_id, due_at]
+              properties:
+                tenant_id: { type: string, format: uuid }
+                type: { type: string, enum: [self_rating_reminder, manager_rating_reminder] }
+                recipient_user_id: { type: string }
+                due_at: { type: string, format: date-time }
+                values: { type: object, additionalProperties: { type: string } }
+      responses:
+        '201': { $ref: '#/components/responses/Object' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /v1/reminders/{id}:cancel:
+    post:
+      operationId: cancelReminder
+      summary: Cancels a scheduled reminder (422 once sent).
+      parameters:
+        [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '422': { $ref: '#/components/responses/Problem' }
+
+  /v1/webhook-endpoints:
+    parameters: [{ $ref: '#/components/parameters/TenantId' }]
+    get:
+      operationId: listWebhookEndpoints
+      summary: The tenant's endpoints (tenant_admin). Secrets are never returned again.
+      responses:
+        '200': { $ref: '#/components/responses/Items' }
+        '401': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: createWebhookEndpoint
+      summary: Adds an https endpoint on a public host; the response carries its signing secret, once.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [url, event_types]
+              properties:
+                tenant_id: { type: string, format: uuid }
+                url: { type: string, format: uri }
+                description: { type: [string, 'null'] }
+                event_types:
+                  { type: array, minItems: 1, items: { $ref: '#/components/schemas/EventType' } }
+      responses:
+        '201': { $ref: '#/components/responses/Object' }
+        '400': { $ref: '#/components/responses/Problem' }
+  /v1/webhook-endpoints/{id}:
+    parameters:
+      [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+    get:
+      operationId: getWebhookEndpoint
+      summary: One endpoint with its failure count and disabled state.
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '404': { $ref: '#/components/responses/Problem' }
+    patch:
+      operationId: updateWebhookEndpoint
+      summary: Changes the URL, description or subscribed event types.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                url: { type: string, format: uri }
+                description: { type: [string, 'null'] }
+                event_types: { type: array, items: { $ref: '#/components/schemas/EventType' } }
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '400': { $ref: '#/components/responses/Problem' }
+    delete:
+      operationId: deleteWebhookEndpoint
+      summary: Deletes the endpoint and its deliveries.
+      responses:
+        '204': { description: Deleted. }
+        '401': { $ref: '#/components/responses/Problem' }
+  /v1/webhook-endpoints/{id}:test:
+    post:
+      operationId: testWebhookEndpoint
+      summary: Sends a signed `ping` now and returns the response status (not stored or counted).
+      parameters:
+        [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /v1/webhook-endpoints/{id}:enable:
+    post:
+      operationId: enableWebhookEndpoint
+      summary: Re-enables an endpoint disabled after 50 consecutive failures; pending deliveries resume.
+      parameters:
+        [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /v1/webhook-endpoints/{id}/deliveries:
+    get:
+      operationId: listWebhookDeliveries
+      summary: Recent deliveries; `status=dead` is the dead-letter queue.
+      parameters:
+        - { $ref: '#/components/parameters/Id' }
+        - { $ref: '#/components/parameters/TenantId' }
+        - { name: status, in: query, schema: { type: string, enum: [pending, delivered, dead] } }
+      responses:
+        '200': { $ref: '#/components/responses/Items' }
+        '401': { $ref: '#/components/responses/Problem' }
+  /v1/webhook-deliveries/{id}:redeliver:
+    post:
+      operationId: redeliverWebhook
+      summary: Moves a dead delivery back to the queue with fresh attempts.
+      parameters:
+        [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '400': { $ref: '#/components/responses/Problem' }
+
+  /v1/me/notifications:
+    get:
+      operationId: listMyNotifications
+      summary: The caller's own in-app notifications, newest first, with the unread count.
+      parameters:
+        - { name: cursor, in: query, schema: { type: string } }
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 100, default: 20 },
+          }
+        - { name: unread_only, in: query, schema: { type: boolean, default: false } }
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /v1/me/notifications:stream:
+    get:
+      operationId: streamMyNotifications
+      summary: >
+        Server-sent events: `notification` (id = resume cursor; send it back as Last-Event-ID),
+        `unread` counts, and a comment heartbeat every 15 s.
+      responses:
+        '200':
+          description: An event stream.
+          content: { text/event-stream: { schema: { type: string } } }
+        '401': { $ref: '#/components/responses/Problem' }
+  /v1/me/notifications/{id}:markRead:
+    post:
+      operationId: markNotificationRead
+      summary: Marks one of the caller's notifications read.
+      parameters: [{ $ref: '#/components/parameters/Id' }]
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/me/notifications:markAllRead:
+    post:
+      operationId: markAllNotificationsRead
+      summary: Marks all of the caller's notifications read.
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+
+        '401': { $ref: '#/components/responses/Problem' }
+  /healthz:
+    get:
+      operationId: healthz
+      summary: Liveness.
+      security: []
+      responses: { '200': { $ref: '#/components/responses/Object' } }
+  /readyz:
+    get:
+      operationId: readyz
+      summary: Readiness (database reachable).
+      security: []
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '503': { $ref: '#/components/responses/Problem' }
+
+        '401': { $ref: '#/components/responses/Problem' }
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+  parameters:
+    Id: { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    Type: { name: type, in: path, required: true, schema: { type: string } }
+    TenantId:
+      name: tenant_id
+      in: query
+      description: Required for platform staff; tenant users act on their own tenant.
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: 8–128 characters of [A-Za-z0-9_.:-]; reuse it when retrying the same request.
+      schema: { type: string, pattern: '^[A-Za-z0-9_.:-]{8,128}$' }
+  requestBodies:
+    Preference:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [enabled]
+            properties:
+              enabled: { type: boolean }
+              email: { type: boolean, default: true }
+              in_app: { type: boolean, default: true }
+  responses:
+    Object:
+      description: OK
+      content: { application/json: { schema: { type: object } } }
+    Items:
+      description: OK
+      content:
+        application/json:
+          schema: { type: object, properties: { items: { type: array, items: { type: object } } } }
+    Accepted:
+      description: Accepted for delivery (a replay with the same key returns the same body).
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status: { type: string, enum: [accepted] }
+              notification_ids: { type: array, items: { type: string, format: uuid } }
+    Problem:
+      description: RFC 9457 problem document (`code` is the stable error).
+      content:
+        application/problem+json:
+          schema:
+            type: object
+            required: [type, title, status, code]
+            properties:
+              type: { type: string }
+              title: { type: string }
+              status: { type: integer }
+              detail: { type: string }
+              code: { type: string }
+              request_id: { type: string }
+    '401': { $ref: '#/components/responses/Problem' }
+  schemas:
+    EventType:
+      type: string
+      enum:
+        - assessment.session.submitted
+        - assessment.session.terminated
+        - assessment.session.evaluated
+        - proctoring.session.finalized
+        - interview.session.completed
+        - report.artifact.ready

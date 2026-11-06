@@ -1,5 +1,34 @@
 # Component Prompt 14: API Gateway & Web Applications
 
+## Status
+
+**Built:**
+
+- `infra/gateway`: Envoy front plus the TypeScript edge, with `routes.yaml`;
+- `packages/api-clients`: generated clients for 11 services;
+- `apps/web`: Next.js 16 portals and the candidate runner;
+- `e2e/`: the Playwright suite against an in-memory stub gateway.
+
+Decisions are in ADR-0011. intelligence-svc gained `GET /v1/employees/me` for the employee portal.
+
+**Verified on this machine:**
+
+- **Gateway, contract test with stubbed cells:**
+  - unknown subdomain → 404 page; suspended → 403 page; cross-cell routing;
+  - JWT tenant match; candidate tokens only on runner routes;
+  - CORS, rate limits, SSE pass-through, spoofed headers dropped.
+- **Gateway, route map against every service's OpenAPI:** public paths reach their owners, internal paths are denied.
+- **End to end:** invite → login → create assessment → candidate completes a coding test with a network drop → recruiter sees the result and the PDF report.
+- axe-core: zero serious or critical violations on 13 pages; Arabic RTL.
+- A CSP nonce on every request, with no unsigned inline scripts.
+
+**Not verified here:**
+
+- Core Web Vitals;
+- the Envoy and WAF config running;
+- a full-stack end-to-end run (the API in the suite is a stub);
+- LiveKit and proctoring in the browser (the stub assessment is not proctored).
+
 ## 1. Context
 
 - PRD §1.2.2 (gateway tenant resolution), §1.3 (topology), §4.3 (accessibility, browser support).

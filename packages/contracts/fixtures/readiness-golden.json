@@ -1,0 +1,90 @@
+{
+  "comment": "PRD §2.5(iii): gap_s = max(0, p_req(s) - p(s)); role_gap% = Σ w_s·gap_s / Σ w_s·p_req(s); readiness = 1 - role_gap%; bands High > 0.5, Medium 0.2-0.5, Low < 0.2. Checked by intelligence-svc (TypeScript) and intelligence-ml (Python), ADR-0009.",
+  "cases": [
+    {
+      "name": "one gap, one met",
+      "requirements": [
+        { "skill_id": "a", "weight": 1, "target_proficiency": 4 },
+        { "skill_id": "b", "weight": 0.5, "target_proficiency": 3 }
+      ],
+      "skills": { "a": 3, "b": 3 },
+      "role_gap_pct": 0.181818,
+      "readiness": 0.818182,
+      "band": "low",
+      "gaps": { "a": 1, "b": 0 }
+    },
+    {
+      "name": "a missing skill counts in full",
+      "requirements": [
+        { "skill_id": "a", "weight": 1, "target_proficiency": 4 },
+        { "skill_id": "b", "weight": 1, "target_proficiency": 2 }
+      ],
+      "skills": { "a": 2 },
+      "role_gap_pct": 0.666667,
+      "readiness": 0.333333,
+      "band": "high",
+      "gaps": { "a": 2, "b": 2 }
+    },
+    {
+      "name": "surplus does not compensate",
+      "requirements": [
+        { "skill_id": "a", "weight": 1, "target_proficiency": 2 },
+        { "skill_id": "b", "weight": 1, "target_proficiency": 4 }
+      ],
+      "skills": { "a": 5, "b": 2 },
+      "role_gap_pct": 0.333333,
+      "readiness": 0.666667,
+      "band": "medium",
+      "gaps": { "a": 0, "b": 2 }
+    },
+    {
+      "name": "exactly 50% is medium",
+      "requirements": [{ "skill_id": "a", "weight": 0.8, "target_proficiency": 5 }],
+      "skills": { "a": 2.5 },
+      "role_gap_pct": 0.5,
+      "readiness": 0.5,
+      "band": "medium",
+      "gaps": { "a": 2.5 }
+    },
+    {
+      "name": "exactly 20% is medium",
+      "requirements": [{ "skill_id": "a", "weight": 1, "target_proficiency": 5 }],
+      "skills": { "a": 4 },
+      "role_gap_pct": 0.2,
+      "readiness": 0.8,
+      "band": "medium",
+      "gaps": { "a": 1 }
+    },
+    {
+      "name": "weights matter",
+      "requirements": [
+        { "skill_id": "a", "weight": 0.9, "target_proficiency": 4 },
+        { "skill_id": "b", "weight": 0.1, "target_proficiency": 4 },
+        { "skill_id": "c", "weight": 0.5, "target_proficiency": 3 }
+      ],
+      "skills": { "a": 4, "b": 0, "c": 1.5 },
+      "role_gap_pct": 0.209091,
+      "readiness": 0.790909,
+      "band": "medium",
+      "gaps": { "a": 0, "b": 4, "c": 1.5 }
+    },
+    {
+      "name": "nothing required",
+      "requirements": [],
+      "skills": { "a": 3 },
+      "role_gap_pct": 0,
+      "readiness": 1,
+      "band": "low",
+      "gaps": {}
+    },
+    {
+      "name": "zero targets need nothing",
+      "requirements": [{ "skill_id": "a", "weight": 1, "target_proficiency": 0 }],
+      "skills": {},
+      "role_gap_pct": 0,
+      "readiness": 1,
+      "band": "low",
+      "gaps": { "a": 0 }
+    }
+  ]
+}

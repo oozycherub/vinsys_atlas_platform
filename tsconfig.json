@@ -13,8 +13,16 @@
       "@atlas/platform/testing": ["packages/platform/src/testing/index.ts"],
       "@atlas/contracts": ["packages/contracts/src/index.ts"],
       "@atlas/scoring": ["packages/scoring/src/index.ts"],
-      "@atlas/proctor-sdk": ["packages/proctor-sdk/src/index.ts"]
+      "@atlas/proctor-sdk": ["packages/proctor-sdk/src/index.ts"],
+      "@atlas/api-clients": ["packages/api-clients/src/index.ts"]
     }
   },
-  "include": ["packages/*/src", "packages/*/test", "services/*/src", "services/*/test"]
+  "include": [
+    "packages/*/src",
+    "packages/*/test",
+    "services/*/src",
+    "services/*/test",
+    "infra/gateway/src",
+    "infra/gateway/test"
+  ]
 }

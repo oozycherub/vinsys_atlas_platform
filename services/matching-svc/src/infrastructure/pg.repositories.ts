@@ -75,6 +75,22 @@ const REQUISITION_COLUMNS = `tenant_id::text, requisition_id::text, title, descr
   created_at, updated_at`;
 
 export class PgRequisitionRepository implements RequisitionRepository {
+  async bySource(tx: Tx, source: string, ref: string): Promise<Requisition | null> {
+    const r = await tx.query<{ id: string }>(
+      `SELECT requisition_id::text AS id FROM requisition_sources WHERE source = $1 AND source_ref = $2`,
+      [source, ref],
+    );
+    return r.rows[0] ? this.find(tx, r.rows[0].id) : null;
+  }
+
+  async linkSource(tx: Tx, source: string, ref: string, requisitionId: string): Promise<void> {
+    await tx.query(
+      `INSERT INTO requisition_sources (tenant_id, source, source_ref, requisition_id)
+       VALUES (current_tenant_id(), $1, $2, $3)`,
+      [source, ref, requisitionId],
+    );
+  }
+
   async insert(tx: Tx, r: Requisition): Promise<void> {
     await tx.query(
       `INSERT INTO job_requisitions (tenant_id, requisition_id, title, description, openings, location,

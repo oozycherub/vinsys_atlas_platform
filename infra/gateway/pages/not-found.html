@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Workspace not found · Atlas</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        margin: 0;
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        background: #f4f5f7;
+        color: #1d2433;
+      }
+      main {
+        max-width: 32rem;
+        padding: 2rem;
+        text-align: center;
+      }
+      h1 {
+        font-size: 1.5rem;
+      }
+      a {
+        color: #1f4fd1;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>We couldn’t find this workspace</h1>
+      <p>
+        There is no Atlas workspace at <strong>{{host}}</strong>. Check the address, or ask your
+        administrator for your organisation’s link.
+      </p>
+      <p class="muted">Reference: {{request_id}}</p>
+    </main>
+  </body>
+</html>

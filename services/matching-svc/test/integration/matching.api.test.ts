@@ -4,12 +4,15 @@
  * and tenant-svc are replaced by the fakes in ./fakes.ts.
  */
 import 'reflect-metadata';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { type INestApplication } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import request from 'supertest';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import {
   CandidateSkillsUpdated,
+  DemandRecruitRequired,
   ErasureRequested,
   JobProfileUpdated,
   ResumeParsed,
@@ -632,6 +635,57 @@ describe('matching-svc API', () => {
         id,
       ]);
       expect(scored.rows.length).toBeGreaterThan(0);
+    });
+  });
+
+  describe('events from other bricks', () => {
+    it('creates one requisition on hold per unstaffable demand (intelligence-svc contract)', async () => {
+      const demandId = newId();
+      const values: Record<string, string> = {
+        tenant_id: tenantA,
+        demand_id: demandId,
+        plan_id: newId(),
+        skill_id: skill.python,
+        start_date: '2027-01-04',
+        occurred_at: NOW.toISOString(),
+      };
+      const fixture = JSON.parse(
+        readFileSync(
+          join(
+            __dirname,
+            '..',
+            '..',
+            '..',
+            '..',
+            'packages',
+            'contracts',
+            'fixtures',
+            'intel.demand.recruit_required.v1.json',
+          ),
+          'utf8',
+        ).replace(/"\{\{(\w+)\}\}"/g, (_, key: string) => JSON.stringify(values[key])),
+      ) as { topic: string; payload: Record<string, unknown> };
+      expect(fixture.topic).toBe(DemandRecruitRequired.topic);
+      DemandRecruitRequired.schema.parse(fixture.payload);
+      await emit(fixture.topic, tenantA, demandId, fixture.payload);
+      await emit(fixture.topic, tenantA, demandId, {
+        ...fixture.payload,
+        plan_id: newId(),
+        headcount: 3,
+      });
+      const list = await http
+        .get('/v1/job-requisitions?status=on_hold&limit=50')
+        .set(auth(reviewerA));
+      const raised = (
+        list.body.items as {
+          title: string;
+          openings: number;
+          status: string;
+          created_by?: string;
+        }[]
+      ).filter((r) => r.title === fixture.payload['title']);
+      expect(raised).toHaveLength(1);
+      expect(raised[0]).toMatchObject({ openings: 3, status: 'on_hold' });
     });
   });
 

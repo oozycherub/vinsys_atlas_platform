@@ -1,0 +1,616 @@
+openapi: 3.1.0
+info:
+  title: Atlas intelligence-svc
+  version: 1.0.0
+  license: { name: Proprietary, identifier: LicenseRef-Proprietary }
+  description: >
+    Workforce intelligence and the internal talent marketplace (docs/prompts/12-intelligence-svc.md,
+    PRD Module 5, ADR-0009): HRIS roster sync, skill-gap heat-maps, career paths, opportunities with
+    Score_internal = Score · A, applications and allocations (never over 100%), demand capture and
+    fulfilment plans (solved by intelligence-ml), and attrition alerts for HRBPs only (scope `hrbp`,
+    audit-logged; employees never see risk). Tenant users act on their own tenant; platform staff and
+    services pass tenant_id. All errors are RFC 9457 problem documents. Custom methods follow AIP-136.
+servers:
+  - url: http://intelligence-svc:8092
+security:
+  - bearer: []
+
+paths:
+  /v1/employees/me:
+    get:
+      operationId: getMyEmployee
+      summary: The caller's own roster record (found by user id), with their role gap.
+      parameters: [{ $ref: '#/components/parameters/TenantId' }]
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/employees/{id}:
+    parameters:
+      [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+    put:
+      operationId: syncEmployee
+      summary: 'HRIS sync of one employee (tenant_admin, or a service with scope hris:sync).'
+      requestBody:
+        {
+          required: true,
+          content: { application/json: { schema: { $ref: '#/components/schemas/Employee' } } },
+        }
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+    get:
+      operationId: getEmployee
+      summary: The employee's own record, for themselves, their manager or HR admins (never risk data).
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/employees:bulkUpsert:
+    post:
+      operationId: bulkSyncEmployees
+      summary: HRIS sync of up to 500 employees.
+      parameters: [{ $ref: '#/components/parameters/TenantId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [employees]
+              properties:
+                employees:
+                  { type: array, maxItems: 500, items: { $ref: '#/components/schemas/Employee' } }
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /v1/employees/{id}/career-paths:
+    parameters:
+      [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+    get:
+      operationId: careerPaths
+      summary: Typed paths (vertical, horizontal, diagonal) up to 3 steps, with readiness, gaps and learning.
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/employees/{id}/applications:
+    parameters:
+      [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+    get:
+      operationId: employeeApplications
+      summary: "The employee's applications; their current manager sees only disclosed ones (unless the tenant policy says otherwise)."
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/employees/{id}/allocations:
+    parameters:
+      [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+    get:
+      operationId: employeeAllocations
+      summary: Project allocations of an employee.
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/intelligence/policy:
+    parameters: [{ $ref: '#/components/parameters/TenantId' }]
+    get:
+      operationId: getPolicy
+      summary: Marketplace and attrition policy (managers and admins).
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '403': { $ref: '#/components/responses/Problem' }
+    put:
+      operationId: setPolicy
+      summary: Set the policy (tenant_admin).
+      requestBody:
+        {
+          required: true,
+          content: { application/json: { schema: { $ref: '#/components/schemas/Policy' } } },
+        }
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /v1/analytics/skill-gaps:
+    get:
+      operationId: skillGaps
+      summary: Heat-map cells (groups under 3 employees are suppressed), with the trend over the period.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - {
+            name: group_by,
+            in: query,
+            schema:
+              { type: string, enum: [department, job_profile, location], default: department },
+          }
+        - {
+            name: period,
+            in: query,
+            schema: { type: string, pattern: '^([1-9]|1[0-9]|2[0-4])m$', default: 6m },
+          }
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /v1/job-profile-transitions:
+    parameters: [{ $ref: '#/components/parameters/TenantId' }]
+    get:
+      operationId: listTransitions
+      summary: TRANSITIONS_TO edges between job profiles.
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '403': { $ref: '#/components/responses/Problem' }
+    put:
+      operationId: putTransition
+      summary: Create or update an edge (tenant_admin).
+      requestBody:
+        {
+          required: true,
+          content: { application/json: { schema: { $ref: '#/components/schemas/Transition' } } },
+        }
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /v1/job-profile-transitions/{from}/{to}:
+    delete:
+      operationId: deleteTransition
+      summary: Remove an edge (tenant_admin).
+      parameters:
+        - { name: from, in: path, required: true, schema: { type: string, format: uuid } }
+        - { name: to, in: path, required: true, schema: { type: string, format: uuid } }
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '204': { description: Removed }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/learning-items:
+    parameters: [{ $ref: '#/components/parameters/TenantId' }]
+    get:
+      operationId: listLearningItems
+      summary: The learning catalogue (an LMS integration feeds it).
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '403': { $ref: '#/components/responses/Problem' }
+    post:
+      operationId: putLearningItem
+      summary: Create or update a learning item (tenant_admin).
+      requestBody:
+        {
+          required: true,
+          content: { application/json: { schema: { $ref: '#/components/schemas/LearningItem' } } },
+        }
+      responses:
+        '201': { $ref: '#/components/responses/Object' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /v1/opportunities:
+    post:
+      operationId: createOpportunity
+      summary: 'Create a draft role, project or gig (hiring_manager, tenant_admin).'
+      parameters: [{ $ref: '#/components/parameters/TenantId' }]
+      requestBody:
+        {
+          required: true,
+          content: { application/json: { schema: { $ref: '#/components/schemas/Opportunity' } } },
+        }
+      responses:
+        '201': { $ref: '#/components/responses/Object' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+    get:
+      operationId: feed
+      summary: "The caller's personalised feed (for=me): open opportunities they can take, ranked by Score_internal."
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - { name: for, in: query, required: true, schema: { type: string, enum: [me] } }
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 100, default: 20 },
+          }
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /v1/opportunities/{id}:
+    get:
+      operationId: getOpportunity
+      summary: An opportunity (drafts only for their owner and admins).
+      parameters:
+        [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/opportunities/{id}:publish:
+    post:
+      operationId: publishOpportunity
+      summary: Open it (emits intel.opportunity.published.v1; the matcher ranks employees).
+      parameters:
+        [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /v1/opportunities/{id}:close:
+    post:
+      operationId: closeOpportunity
+      summary: Close it.
+      parameters:
+        [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /v1/opportunities/{id}:recommendCandidates:
+    post:
+      operationId: recommendCandidates
+      summary: Ranked employees with explanations (owner or admin).
+      parameters:
+        [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                limit: { type: integer, minimum: 1, maximum: 200, default: 20 }
+                include_unavailable: { type: boolean, default: false }
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/opportunities/{id}/applications:
+    parameters:
+      [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+    post:
+      operationId: apply
+      summary: The caller applies (opt-in needed except for projects).
+      requestBody:
+        {
+          content:
+            {
+              application/json:
+                {
+                  schema:
+                    {
+                      type: object,
+                      properties: { note: { type: [string, 'null'], maxLength: 2000 } },
+                    },
+                },
+            },
+        }
+      responses:
+        '201': { $ref: '#/components/responses/Object' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+    get:
+      operationId: listApplications
+      summary: Applications and invitations to this opportunity (owner or admin).
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /v1/opportunities/{id}/invitations:
+    post:
+      operationId: invite
+      summary: The owner invites an employee.
+      parameters:
+        [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [employee_id]
+              properties:
+                employee_id: { type: string, format: uuid }
+                note: { type: [string, 'null'], maxLength: 2000 }
+      responses:
+        '201': { $ref: '#/components/responses/Object' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /v1/applications/{id}:{verb}:
+    post:
+      operationId: decideApplication
+      summary: 'accept, decline, withdraw or disclose. Accepting books the allocation (409 ALLOCATION_EXCEEDS_CAPACITY over 100%).'
+      parameters:
+        - $ref: '#/components/parameters/Id'
+        - {
+            name: verb,
+            in: path,
+            required: true,
+            schema: { type: string, enum: [accept, decline, withdraw, disclose] },
+          }
+        - $ref: '#/components/parameters/TenantId'
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+        '422': { $ref: '#/components/responses/Problem' }
+  /v1/projects:
+    post:
+      operationId: createProject
+      summary: A project (or client account engagement) to book time on.
+      parameters: [{ $ref: '#/components/parameters/TenantId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, start_date]
+              properties:
+                name: { type: string, maxLength: 200 }
+                account_id: { type: [string, 'null'], maxLength: 100 }
+                start_date: { type: string, format: date }
+                end_date: { type: [string, 'null'], format: date }
+      responses:
+        '201': { $ref: '#/components/responses/Object' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /v1/projects/{id}/allocations:
+    post:
+      operationId: allocate
+      summary: Book an employee (the database refuses anything over 100% on any day).
+      parameters:
+        [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [employee_id, percent, start_date]
+              properties:
+                employee_id: { type: string, format: uuid }
+                percent: { type: integer, minimum: 1, maximum: 100 }
+                start_date: { type: string, format: date }
+                end_date: { type: [string, 'null'], format: date }
+      responses:
+        '201': { $ref: '#/components/responses/Object' }
+        '404': { $ref: '#/components/responses/Problem' }
+        '409': { $ref: '#/components/responses/Problem' }
+  /v1/allocations/{id}:
+    delete:
+      operationId: removeAllocation
+      summary: Remove an allocation (emits intel.allocation.changed.v1).
+      parameters:
+        [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+      responses:
+        '204': { description: Removed }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/demands:upload:
+    post:
+      operationId: uploadDemands
+      summary: A .csv or .xlsx sheet of demand lines (base64 in JSON, up to 5 MB); bad rows are reported by row.
+      parameters: [{ $ref: '#/components/parameters/TenantId' }]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [file_name, content_base64]
+              properties:
+                file_name: { type: string, pattern: '\.(csv|xlsx)$' }
+                content_base64: { type: string }
+      responses:
+        '202': { $ref: '#/components/responses/Object' }
+        '400': { $ref: '#/components/responses/Problem' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /v1/demand-batches/{id}:
+    get:
+      operationId: getDemandBatch
+      summary: An upload's result.
+      parameters:
+        [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/demands:
+    get:
+      operationId: listDemands
+      summary: Demand lines.
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - { name: status, in: query, schema: { type: string, enum: [open, fulfilled, cancelled] } }
+        - { name: account_id, in: query, schema: { type: string } }
+        - { name: batch_id, in: query, schema: { type: string, format: uuid } }
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /v1/fulfilment-plans:compute:
+    post:
+      operationId: computePlan
+      summary: Queue a plan for intelligence-ml (CP-SAT); a queued or running plan for the same account is returned instead.
+      parameters: [{ $ref: '#/components/parameters/TenantId' }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                account_id: { type: [string, 'null'], maxLength: 100 }
+                horizon_days: { type: integer, minimum: 1, maximum: 730, default: 90 }
+      responses:
+        '202': { $ref: '#/components/responses/Object' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /v1/fulfilment-plans/{id}:
+    get:
+      operationId: getPlan
+      summary: 'A plan; when done, one line per demand slot: redeploy, upskill or recruit.'
+      parameters:
+        [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/attrition/alerts:
+    get:
+      operationId: attritionAlerts
+      summary: 'Attrition alerts (HRBP: scope hrbp; audit-logged).'
+      parameters:
+        - $ref: '#/components/parameters/TenantId'
+        - { name: status, in: query, schema: { type: string, enum: [open, acknowledged, closed] } }
+        - {
+            name: limit,
+            in: query,
+            schema: { type: integer, minimum: 1, maximum: 500, default: 100 },
+          }
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /v1/attrition/alerts/{id}:acknowledge:
+    post:
+      operationId: acknowledgeAlert
+      summary: Acknowledge an open alert (HRBP).
+      parameters:
+        [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /v1/attrition/employees/{id}:
+    get:
+      operationId: attritionEmployee
+      summary: An employee's recent scores and drivers (HRBP).
+      parameters:
+        [{ $ref: '#/components/parameters/Id' }, { $ref: '#/components/parameters/TenantId' }]
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '403': { $ref: '#/components/responses/Problem' }
+  /v1/attrition/model:
+    get:
+      operationId: attritionModel
+      summary: The active model's metrics, features, exclusions, gates and drift (HRBP).
+      parameters: [{ $ref: '#/components/parameters/TenantId' }]
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '403': { $ref: '#/components/responses/Problem' }
+        '404': { $ref: '#/components/responses/Problem' }
+  /healthz:
+    get:
+      operationId: healthz
+      summary: Liveness.
+      security: []
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '503': { $ref: '#/components/responses/Problem' }
+  /readyz:
+    get:
+      operationId: readyz
+      summary: Readiness (the database answers).
+      security: []
+      responses:
+        '200': { $ref: '#/components/responses/Object' }
+        '503': { $ref: '#/components/responses/Problem' }
+
+components:
+  securitySchemes:
+    bearer: { type: http, scheme: bearer, bearerFormat: JWT }
+  parameters:
+    Id: { name: id, in: path, required: true, schema: { type: string, format: uuid } }
+    TenantId:
+      name: tenant_id
+      in: query
+      description: Required for platform staff and services; tenant users act on their own tenant.
+      schema: { type: string, format: uuid }
+  responses:
+    Object:
+      description: OK
+      content: { application/json: { schema: { type: object } } }
+    Problem:
+      description: RFC 9457 problem document (`code` is the stable error).
+      content:
+        application/problem+json:
+          schema:
+            type: object
+            required: [type, title, status, code]
+            properties:
+              type: { type: string }
+              title: { type: string }
+              status: { type: integer }
+              detail: { type: string }
+              code: { type: string }
+              request_id: { type: string }
+  schemas:
+    Requirement:
+      type: object
+      required: [skill_id, weight, target_proficiency]
+      properties:
+        skill_id: { type: string, format: uuid }
+        weight: { type: number, exclusiveMinimum: 0, maximum: 1 }
+        target_proficiency: { type: number, minimum: 0, maximum: 5 }
+        must_have: { type: boolean, default: false }
+    Employee:
+      type: object
+      properties:
+        employee_id:
+          { type: string, format: uuid, description: 'Bulk only: the profile-svc candidate id.' }
+        user_id: { type: [string, 'null'] }
+        manager_user_id: { type: [string, 'null'] }
+        department: { type: [string, 'null'] }
+        location: { type: [string, 'null'] }
+        job_profile_id: { type: [string, 'null'], format: uuid }
+        hired_at: { type: [string, 'null'], format: date }
+        role_started_at: { type: [string, 'null'], format: date }
+        last_promotion_at: { type: [string, 'null'], format: date }
+        manager_changed_at: { type: [string, 'null'], format: date }
+        compa_ratio: { type: [number, 'null'] }
+        engagement_delta: { type: [number, 'null'] }
+        overtime_hours_4w: { type: [number, 'null'] }
+        marketplace_opt_in: { type: boolean }
+        status: { type: string, enum: [active, terminated] }
+        terminated_at: { type: [string, 'null'], format: date }
+        termination_voluntary: { type: [boolean, 'null'] }
+        source_synced_at: { type: [string, 'null'], format: date-time }
+        protected_attributes:
+          type: [object, 'null']
+          description: Fairness-audit attributes only; never model features, readable only by the attrition audit.
+          additionalProperties: { type: string }
+    Policy:
+      type: object
+      required: [applications_visible_to_manager, learning_hours_per_day, attrition_threshold]
+      properties:
+        applications_visible_to_manager: { type: boolean }
+        learning_hours_per_day: { type: number, exclusiveMinimum: 0, maximum: 8 }
+        attrition_threshold: { type: number, exclusiveMinimum: 0, exclusiveMaximum: 1 }
+    Transition:
+      type: object
+      required: [from_profile_id, to_profile_id, transition_type]
+      properties:
+        from_profile_id: { type: string, format: uuid }
+        to_profile_id: { type: string, format: uuid }
+        transition_type: { type: string, enum: [vertical, horizontal, diagonal] }
+        typical_months: { type: [integer, 'null'], minimum: 0, maximum: 240 }
+    LearningItem:
+      type: object
+      required: [title, skill_ids, duration_hours]
+      properties:
+        item_id: { type: string, format: uuid }
+        title: { type: string, maxLength: 300 }
+        provider: { type: [string, 'null'] }
+        url: { type: [string, 'null'], format: uri }
+        skill_ids: { type: array, minItems: 1, maxItems: 20, items: { type: string, format: uuid } }
+        duration_hours: { type: number, exclusiveMinimum: 0, maximum: 2000 }
+        external_ref: { type: [string, 'null'] }
+    Opportunity:
+      type: object
+      required: [type, title, start_date]
+      properties:
+        type: { type: string, enum: [role, project, gig] }
+        title: { type: string, maxLength: 200 }
+        description: { type: string, maxLength: 20000 }
+        job_profile_id: { type: [string, 'null'], format: uuid }
+        requisition_id:
+          {
+            type: [string, 'null'],
+            format: uuid,
+            description: matching-svc's score for it ranks a linked role.,
+          }
+        project_id:
+          { type: [string, 'null'], format: uuid, description: Required for projects and gigs. }
+        skills: { type: [array, 'null'], items: { $ref: '#/components/schemas/Requirement' } }
+        allocation_pct: { type: integer, minimum: 1, maximum: 100, default: 100 }
+        start_date: { type: string, format: date }
+        end_date: { type: [string, 'null'], format: date }
+        location: { type: [string, 'null'] }
+        min_tenure_months: { type: integer, minimum: 0, maximum: 120, default: 12 }

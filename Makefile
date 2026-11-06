@@ -1,4 +1,4 @@
-.PHONY: bootstrap infra-up infra-down migrate typecheck lint test build verify py-bootstrap py-verify openapi-py go-verify sandbox-attacks
+.PHONY: bootstrap infra-up infra-down migrate typecheck lint test build verify py-bootstrap py-verify openapi-py go-verify sandbox-attacks clients e2e
 
 bootstrap:            ## install dependencies (Node 24, npm 11)
 	npm ci
@@ -24,17 +24,20 @@ test:
 build:
 	npm run build
 
-PY_SERVICES := services/llm-gateway services/parsing-svc services/cv-inference services/interview-svc
+PY_SERVICES := services/llm-gateway services/parsing-svc services/cv-inference services/interview-svc services/intelligence-ml
 
 py-bootstrap:         ## install Python services (uv; Python 3.12 per .python-version)
 	@for s in $(PY_SERVICES); do (cd $$s && uv sync --frozen) || exit 1; done
 
 py-verify:            ## ruff, mypy --strict, pytest with coverage (≥ 85%) for every Python service
+	@# pytest runs on the venv's Python: macOS drops DYLD_* through uv run, and LightGBM needs scikit-learn's libomp there.
 	@for s in $(PY_SERVICES); do \
 	  pkg=$$(basename $$s | tr - _); \
 	  (cd $$s && uv run ruff check src tests ../../packages/py-platform/src \
 	    && uv run ruff format --check src tests ../../packages/py-platform/src \
-	    && uv run mypy src tests && uv run pytest --cov=$$pkg --cov-fail-under=85) || exit 1; \
+	    && uv run mypy src tests \
+	    && DYLD_FALLBACK_LIBRARY_PATH=$$PWD/.venv/lib/python3.12/site-packages/sklearn/.dylibs \
+	       .venv/bin/python -m pytest --cov=$$pkg --cov-fail-under=85) || exit 1; \
 	done
 
 openapi-py:           ## regenerate checked-in OpenAPI for Python services
@@ -58,3 +61,9 @@ go-verify:            ## gofmt, vet, golangci-lint, race tests with coverage (>=
 
 sandbox-attacks:      ## attack corpus + golden programs against the real isolate sandbox (Linux/Docker)
 	services/sandbox-svc/test/attacks/run.sh
+
+clients:              ## regenerate packages/api-clients from every public openapi.yaml
+	npm run generate -w @atlas/api-clients
+
+e2e:                  ## Playwright: production web build against the stub gateway (needs: npx playwright install chromium-headless-shell)
+	npm run e2e

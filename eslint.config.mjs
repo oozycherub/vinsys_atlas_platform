@@ -15,6 +15,12 @@ export default tseslint.config(
       '**/.venv/**',
       // Judge corpus: hostile and golden programs, kept exactly as written.
       'services/sandbox-svc/test/attacks/testdata/**',
+      // Generated or built web assets.
+      'packages/api-clients/src/generated/**',
+      'apps/web/.next/**',
+      'apps/web/public/monaco/**',
+      'e2e/test-results/**',
+      'e2e/playwright-report/**',
     ],
   },
   eslint.configs.recommended,
@@ -34,6 +40,32 @@ export default tseslint.config(
         { paths: [{ name: 'pg', message: 'Use Db/Tx from @atlas/platform.' }] },
       ],
     },
+  },
+  {
+    // The web app and e2e suite (TSX): same type-import and equality rules as the services.
+    files: ['apps/web/**/*.{ts,tsx}', 'e2e/**/*.ts'],
+    rules: {
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/consistent-type-imports': ['error', { fixStyle: 'inline-type-imports' }],
+      'no-console': 'error',
+      eqeqeq: ['error', 'always'],
+    },
+  },
+  {
+    // Node scripts (code generation, Monaco copy, the e2e stub gateway).
+    files: ['**/scripts/*.mjs', 'e2e/stub/*.mjs'],
+    languageOptions: {
+      globals: {
+        process: 'readonly',
+        console: 'readonly',
+        Buffer: 'readonly',
+        URL: 'readonly',
+        setInterval: 'readonly',
+        clearInterval: 'readonly',
+        setTimeout: 'readonly',
+      },
+    },
+    rules: { 'no-console': 'off' },
   },
   {
     files: ['packages/platform/**/*.ts'],
