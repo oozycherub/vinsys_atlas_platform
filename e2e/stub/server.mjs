@@ -15,6 +15,22 @@ const users = new Map([
     { user_id: id(), email: 'admin@acme.test', roles: ['tenant_admin'], status: 'active' },
   ],
 ]);
+if (process.env.STUB_DEMO === '1') {
+  users.set('recruiter@acme.test', {
+    user_id: id(),
+    email: 'recruiter@acme.test',
+    roles: ['recruiter'],
+    status: 'active',
+  });
+  users.set('employee@acme.test', {
+    user_id: id(),
+    email: 'employee@acme.test',
+    roles: ['employee'],
+    status: 'active',
+  });
+}
+const WEB = process.env.STUB_WEB_ORIGIN ?? 'http://localhost:3100';
+const outbox = []; // every "email" sent, newest first (the demo inbox page)
 const mail = new Map(); // email -> { kind, token, binding? }
 const magic = new Map(); // token -> { email, binding }
 const invitations = new Map(); // token -> email
@@ -98,6 +114,26 @@ const routes = [
     /^\/__mailbox$/,
     (req, res, _m, url) => send(res, 200, mail.get(url.searchParams.get('email')) ?? {}),
   ],
+  [
+    'GET',
+    /^\/__inbox$/,
+    (req, res) => {
+      const esc = (v) => String(v).replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`);
+      const rows = outbox
+        .map(
+          (m) =>
+            `<li><strong>${esc(m.subject)}</strong> to ${esc(m.to)} <small>${esc(m.at.toISOString().slice(11, 19))} UTC</small><br><a href="${esc(m.link)}">Open the link</a></li>`,
+        )
+        .join('');
+      res.writeHead(200, {
+        'content-type': 'text/html; charset=utf-8',
+        'cache-control': 'no-store',
+      });
+      res.end(
+        `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Demo inbox</title><style>body{font-family:system-ui;max-width:40rem;margin:2rem auto;padding:0 1rem}li{margin:1rem 0}</style></head><body><h1>Demo inbox</h1><p>Emails the simulation would have sent. Click a link to sign in. Each link works once; use the newest one.</p><p><a href="${esc(WEB)}/login">Back to Atlas sign-in</a> · <a href="">Refresh</a></p><ul>${rows || '<li>No emails yet.</li>'}</ul></body></html>`,
+      );
+    },
+  ],
   // --- identity ---
   [
     'POST',
@@ -109,6 +145,12 @@ const routes = [
         const t = token();
         magic.set(t, { email: b.email, binding });
         mail.set(b.email, { kind: 'magic_link', token: t });
+        outbox.unshift({
+          to: b.email,
+          subject: 'Your Atlas sign-in link',
+          link: `${WEB}/auth/magic?token=${t}`,
+          at: new Date(),
+        });
       }
       send(res, 202, { binding, expires_in: 1800 });
     },
@@ -119,7 +161,8 @@ const routes = [
     async (req, res) => {
       const b = await body(req);
       const m = magic.get(b.token);
-      if (!m || m.binding !== b.binding)
+      // The demo skips the browser binding so a link works in any tab (identity-svc enforces it).
+      if (!m || (process.env.STUB_DEMO !== '1' && m.binding !== b.binding))
         return problem(res, 401, 'INVALID_LINK', 'This link is not valid.');
       magic.delete(b.token);
       send(res, 200, {
@@ -141,6 +184,12 @@ const routes = [
       const t = token();
       invitations.set(t, b.email);
       mail.set(b.email, { kind: 'invitation', token: t });
+      outbox.unshift({
+        to: b.email,
+        subject: 'You have been invited to Atlas',
+        link: `${WEB}/invite?token=${t}`,
+        at: new Date(),
+      });
       send(res, 201, u);
     },
   ],
